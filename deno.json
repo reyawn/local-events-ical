@@ -1,0 +1,17 @@
+{
+  "tasks": {
+    "dev": "deno run --watch src/main.ts"
+  },
+  "deploy": {
+    "project": "7bda2389-6b0a-4b28-88b3-2b01f61481c9",
+    "exclude": [
+      "**/node_modules",
+      "**/node_modules"
+    ],
+    "include": [],
+    "entrypoint": "src/main.ts"
+  },
+  "imports": {
+    "@locale-kit/locale-kit": "jsr:@locale-kit/locale-kit@^2.2.0"
+  }
+}
