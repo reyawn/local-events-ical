@@ -29,11 +29,6 @@ if (import.meta.main) {
       return new Response("Unknown or unsupported postcode", { status: 404 });
     }
 
-    console.log(
-      "Request headers: ",
-      JSON.stringify([...request.headers.entries()]),
-    );
-
     const acceptLanguageHeaderValue = request.headers.get("Accept-Language") ??
       "";
 
