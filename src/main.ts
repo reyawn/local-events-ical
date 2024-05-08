@@ -3,10 +3,10 @@ import acceptLanguageParser from "npm:accept-language-parser@1.5.0";
 import {
   addLocalizedPickupEventsToCalendar,
   createCalendar,
-} from "./calendar.ts";
+} from "./calendar/index.ts";
 import { lookupCityConfigurationForPostCode } from "./cities/index.ts";
 import { DEFAULT_LANGUAGE } from "./config.ts";
-import type { I18nSupportedLocale } from "./types.ts";
+import type { SupportedLocale } from "./types.ts";
 
 // Learn more at https://deno.land/manual/examples/module_metadata#concepts
 if (import.meta.main) {
@@ -36,7 +36,7 @@ if (import.meta.main) {
       ["en", "nl"],
       acceptLanguageHeaderValue,
     ) ??
-      DEFAULT_LANGUAGE) as I18nSupportedLocale;
+      DEFAULT_LANGUAGE) as SupportedLocale;
 
     const localizedEventsPerSource = await Promise.all(
       cityConfiguration.eventSources.map((eventSource) =>
@@ -51,9 +51,7 @@ if (import.meta.main) {
       ),
     );
 
-    const calendar = createCalendar({
-      name: `${cityConfiguration.name} afvalkalender`,
-    });
+    const calendar = createCalendar(cityConfiguration, { locale });
 
     for (const localizedEvents of localizedEventsPerSource) {
       addLocalizedPickupEventsToCalendar(localizedEvents, calendar);

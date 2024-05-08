@@ -1,10 +1,15 @@
 import ical, {
   ICalCalendar,
-  ICalCalendarData,
   ICalCalendarMethod,
 } from "npm:ical-generator@7.0.0";
-import { CALENDAR_TTL } from "./config.ts";
-import { EveryPickupEventType, LocalizedPickupEvent } from "./types.ts";
+import { CALENDAR_TTL } from "../config.ts";
+import type {
+  CityConfiguration,
+  EveryPickupEventType,
+  LocalizedPickupEvent,
+  SupportedLocale,
+} from "../types.ts";
+import i18n from "./i18n.ts";
 
 export const addLocalizedPickupEventsToCalendar = <
   PickupEventType extends EveryPickupEventType,
@@ -23,13 +28,12 @@ export const addLocalizedPickupEventsToCalendar = <
   return calendar;
 };
 
-export const createCalendar = ({
-  description,
-  name,
-}: Pick<ICalCalendarData, "name" | "description">): ICalCalendar => {
+export const createCalendar = (
+  configuration: CityConfiguration,
+  { locale }: { locale: SupportedLocale },
+): ICalCalendar => {
   const calendar = ical({
-    ...(description === undefined ? undefined : { description }),
-    name,
+    name: i18n[locale].name(configuration),
     timezone: "Europe/Amsterdam",
     ttl: CALENDAR_TTL,
   });

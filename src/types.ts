@@ -23,7 +23,7 @@ export interface LocalizedPickupEvent<
 }
 
 export interface FetchPickupEventsOptions {
-  locale: I18nSupportedLocale;
+  locale: SupportedLocale;
 }
 
 type FetchLocalizedPickupEvents<
@@ -44,6 +44,11 @@ export interface EventSource<
 // From and to are 4 digit unsigned integers and the range is inclusive.
 type PostCodePrefixRange = [from: number, to: number];
 
+export enum SupportedLocale {
+  "en" = "en",
+  "nl" = "nl",
+}
+
 export interface CityConfiguration {
   eventSources: EventSource[];
   name: string;
@@ -55,15 +60,20 @@ interface I8nPickupEvent {
   title: string;
 }
 
-export interface I18nLocale<PickupEventType extends EveryPickupEventType> {
+export interface I18nEventSourceLocale<
+  PickupEventType extends EveryPickupEventType,
+> {
   pickupEventByType: {
     [key in PickupEventType]: I8nPickupEvent;
   };
 }
 
-export interface I18n<PickupEventType extends EveryPickupEventType> {
-  en: I18nLocale<PickupEventType>;
-  nl: I18nLocale<PickupEventType>;
-}
+export type I18nEventSource<PickupEventType extends EveryPickupEventType> = {
+  [Locale in SupportedLocale]: I18nEventSourceLocale<PickupEventType>;
+};
 
-export type I18nSupportedLocale = keyof I18n<EveryPickupEventType>;
+export type I18nCalendar = {
+  [Locale in SupportedLocale]: {
+    name: (configuration: CityConfiguration) => string;
+  };
+};

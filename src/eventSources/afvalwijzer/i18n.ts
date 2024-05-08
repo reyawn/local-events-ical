@@ -1,7 +1,7 @@
-import type { I18n, I18nLocale } from "../../types.ts";
+import type { I18nEventSource, I18nEventSourceLocale } from "../../types.ts";
 import { PickupEventType } from "./types.ts";
 
-const en: I18nLocale<PickupEventType> = {
+const en: I18nEventSourceLocale<PickupEventType> = {
   pickupEventByType: {
     [PickupEventType.Restafval]: {
       title: "Garbage",
@@ -15,7 +15,7 @@ const en: I18nLocale<PickupEventType> = {
   },
 };
 
-const nl: I18nLocale<PickupEventType> = {
+const nl: I18nEventSourceLocale<PickupEventType> = {
   pickupEventByType: {
     [PickupEventType.Restafval]: {
       title: "Restafval",
@@ -29,7 +29,7 @@ const nl: I18nLocale<PickupEventType> = {
   },
 };
 
-const i18n: I18n<PickupEventType> = {
+const i18n: I18nEventSource<PickupEventType> = {
   en,
   nl,
 };
