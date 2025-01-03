@@ -10,7 +10,7 @@ import type { SupportedLocale } from "./types.ts";
 
 // Learn more at https://deno.land/manual/examples/module_metadata#concepts
 if (import.meta.main) {
-  const year = "2024";
+  const year = new Date().getFullYear().toString(10);
   const pathRegex =
     /^\/(?<postCode>\d{4}[A-Z]{2})\/(?<houseNumber>\d{1,5})\/?$/;
 
