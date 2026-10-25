@@ -6,7 +6,7 @@ garbage and recycling pick-ups.
 Request `/{postcode}/{houseNumber}`, for example `/1706AC/20`. The postcode
 uses uppercase letters. `Accept-Language` selects `nl` or `en` (default `en`).
 
-Node.js 24.14.1 is selected by `.tool-versions` for asdf.
+Node.js 24.22.1 is selected by `.tool-versions` for asdf.
 
 ```sh
 npm install
