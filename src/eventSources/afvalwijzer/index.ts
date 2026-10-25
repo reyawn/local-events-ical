@@ -1,6 +1,3 @@
-// @deno-types="npm:@types/jsdom@21.1.6"
-import { JSDOM } from "npm:jsdom@24.0.0";
-
 import i18n from "./i18n.ts";
 import type {
   Address,
@@ -14,6 +11,7 @@ import { PickupEventType } from "./types.ts";
 export type EventSource = InternalEventSource<PickupEventType>;
 
 const NAME = "Afvalwijzer";
+const USER_AGENT = "local-events-ical";
 
 const PickupTypeReverseMap = new Map<string, PickupEventType>([
   ["restafval", PickupEventType.Restafval],
@@ -36,64 +34,108 @@ const dutchMonthToMonthNumberText = new Map<string, string>([
   ["december", "12"],
 ]);
 
-const fetchAddressHtml = async (address: Address): Promise<string> => {
-  const url = `https://www.mijnafvalwijzer.nl/nl/${address.postCode}/${
+export interface PickupParagraph {
+  pickupType: string;
+  text: string;
+}
+
+const addressUrl = (address: Address): string =>
+  `https://www.mijnafvalwijzer.nl/nl/${address.postCode}/${
     address.houseNumber.toString(10)
   }/`;
-  const response = await fetch(url);
-  return await response.text();
+
+// The first class token is the waste type. Later tokens are layout classes.
+const firstClassToken = (classAttribute: string | null): string =>
+  classAttribute?.split(/\s+/)[0] ?? "";
+
+export const collectPickupParagraphs = async (
+  page: Response,
+  year: string,
+): Promise<PickupParagraph[]> => {
+  const paragraphs: PickupParagraph[] = [];
+  let current: PickupParagraph | null = null;
+
+  await new HTMLRewriter()
+    .on(`#jaar-${year} p`, {
+      element(element) {
+        current = {
+          pickupType: firstClassToken(element.getAttribute("class")),
+          text: "",
+        };
+        paragraphs.push(current);
+      },
+      text(chunk) {
+        if (current) {
+          current.text += chunk.text;
+        }
+      },
+    })
+    .transform(page)
+    .arrayBuffer();
+
+  return paragraphs;
 };
 
-const loadAddressDom = async (address: Address): Promise<JSDOM> => {
-  const html = await fetchAddressHtml(address);
-  return new JSDOM(html);
+// First line is "weekday day month", matching the previous textContent split.
+export const pickupEventFromParagraph = (
+  { pickupType, text }: PickupParagraph,
+  year: string,
+): PickupEvent<PickupEventType> => {
+  const type = PickupTypeReverseMap.get(pickupType);
+  if (!type) {
+    throw new Error(`Unknown pickup type: ${pickupType}`);
+  }
+
+  const [
+    ,
+    monthDayFromOne,
+    dutchMonth,
+  ] = text.trim().split("\n")[0]?.split(" ") ?? [];
+
+  if (typeof monthDayFromOne !== "string" || typeof dutchMonth !== "string") {
+    throw new Error(`Invalid date: ${text}`);
+  }
+
+  const monthNumber = dutchMonthToMonthNumberText.get(dutchMonth);
+  if (!monthNumber) {
+    throw new Error(`Unknown month: ${dutchMonth}`);
+  }
+
+  const date = new Date(`${year}-${monthNumber}-${monthDayFromOne}`);
+  return { type, date };
 };
 
-const fetchPickupEvents = async (
-  address: Address,
+export const parsePickupEvents = async (
+  page: Response,
   year: string,
 ): Promise<Array<PickupEvent<PickupEventType>>> => {
-  const dom = await loadAddressDom(address);
-
-  const pickupDateParagraphElementNodeList = dom.window.document
-    .querySelectorAll(
-      `#jaar-${year} p`,
-    ) as NodeListOf<HTMLParagraphElement>;
-
-  const pickupEvents: PickupEvent<PickupEventType>[] = [
-    ...pickupDateParagraphElementNodeList,
-  ].map((
-    { classList: [pickupType], textContent }: HTMLParagraphElement,
-  ): PickupEvent<PickupEventType> => {
-    const type = PickupTypeReverseMap.get(pickupType);
-    if (!type) {
-      throw new Error(`Unknown pickup type: ${pickupType}`);
-    }
-
-    const [
-      ,
-      monthDayFromOne,
-      dutchMonth,
-    ] = textContent?.trim().split("\n")[0].split(" ") ?? [];
-
-    if (typeof monthDayFromOne !== "string" || typeof dutchMonth !== "string") {
-      throw new Error(`Invalid date: ${textContent}`);
-    }
-
-    const monthNumber = dutchMonthToMonthNumberText.get(dutchMonth);
-    if (!monthNumber) {
-      throw new Error(`Unknown month: ${dutchMonth}`);
-    }
-
-    const date = new Date(`${year}-${monthNumber}-${monthDayFromOne}`);
-    return { type, date };
-  });
+  const paragraphs = await collectPickupParagraphs(page, year);
+  const pickupEvents = paragraphs.map((paragraph) =>
+    pickupEventFromParagraph(paragraph, year)
+  );
 
   if (pickupEvents.length === 0) {
     throw new Error("No pickup events found");
   }
 
   return pickupEvents;
+};
+
+const fetchAddressPage = async (address: Address): Promise<Response> => {
+  return await fetch(addressUrl(address), {
+    headers: {
+      "Accept": "text/html",
+      "User-Agent": USER_AGENT,
+    },
+  });
+};
+
+const fetchPickupEvents = async (
+  address: Address,
+  year: string,
+): Promise<Array<PickupEvent<PickupEventType>>> => {
+  const page = await fetchAddressPage(address);
+  return await parsePickupEvents(page, year);
 };
 
 const fetchLocalizedPickupEvents = async (
