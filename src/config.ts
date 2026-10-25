@@ -10,7 +10,7 @@ const stringToNumber = (string?: string): number | undefined =>
 const numberWithinBounds = (
   number: number,
   { max, min }: { min: number; max: number },
-): number | undefined => {
+): number => {
   if (number < min) {
     return min;
   }
@@ -22,9 +22,11 @@ const numberWithinBounds = (
   return number;
 };
 
-export const CALENDAR_TTL = numberWithinBounds(
-  stringToNumber(Deno.env.get("CALENDAR_TTL")) ?? ONE_DAY,
-  { min: ONE_HOUR, max: ONE_WEEK },
-);
+// Workers pass bindings on the request. An absent value keeps the one-day default.
+export const calendarTtl = (raw?: string): number =>
+  numberWithinBounds(stringToNumber(raw) ?? ONE_DAY, {
+    min: ONE_HOUR,
+    max: ONE_WEEK,
+  });
 
 export const DEFAULT_LANGUAGE = SupportedLocale.en;

@@ -1,8 +1,7 @@
 import ical, {
   ICalCalendar,
   ICalCalendarMethod,
-} from "npm:ical-generator@7.0.0";
-import { CALENDAR_TTL } from "../config.ts";
+} from "ical-generator";
 import type {
   CityConfiguration,
   EveryPickupEventType,
@@ -30,12 +29,12 @@ export const addLocalizedPickupEventsToCalendar = <
 
 export const createCalendar = (
   configuration: CityConfiguration,
-  { locale }: { locale: SupportedLocale },
+  { locale, ttl }: { locale: SupportedLocale; ttl: number },
 ): ICalCalendar => {
   const calendar = ical({
     name: i18n[locale].name(configuration),
     timezone: "Europe/Amsterdam",
-    ttl: CALENDAR_TTL,
+    ttl,
   });
 
   calendar.method(ICalCalendarMethod.REQUEST);
