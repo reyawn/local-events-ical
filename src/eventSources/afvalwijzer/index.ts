@@ -15,7 +15,7 @@ const USER_AGENT = "local-events-ical";
 const DEFAULT_ORIGIN = "https://www.mijnafvalwijzer.nl";
 
 const originBase = (origin?: string): string =>
-  (origin ? origin : DEFAULT_ORIGIN).replace(/\/$/, "");
+  (origin ?? DEFAULT_ORIGIN).replace(/\/$/, "");
 
 const PickupTypeReverseMap = new Map<string, PickupEventType>([
   ["restafval", PickupEventType.Restafval],

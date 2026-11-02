@@ -6,7 +6,7 @@ A known address returns an iCal feed of that year's pickups. `Accept-Language` s
 
 - `feed-nl` returns the Dutch calendar for `/1701DA/25`.
 - `feed-en` returns the English calendar for the same path.
-- `feed-dates` lists one all-day event per pickup in the nl fixture, in that order.
+- `feed-dates` matches the golden nl and en calendars for that address.
 
 ## How to get to it (user POV)
 
@@ -23,10 +23,10 @@ Preconditions:
 
 - **Dutch feed.** Run `node .cursor/skills/verify-local-events-ical/helpers/check-feed.mjs --base http://127.0.0.1:$WORKER_PORT --out $RUN`. Exit 0. `$RUN/nl.body` is `text/calendar`, `NAME:Dijk en Waard afvalkalender`, and the summaries are `Restafval`, `Groente, Fruit en Tuinafval`, and `Plastic, Metalen en Drankkartons`.
 - **English feed.** The same command writes `$RUN/en.body`. `NAME:Dijk en Waard Garbage Calendar`. Summaries are `Garbage`, `Compostable waste`, and `Plastic, Metal and Drink cartons`.
-- **Dates.** `result.txt` reports `ok 64 events nl+en from /1701DA/25`. Each `DTSTART` is `VALUE=DATE` in the current year, `TIMEZONE-ID` is `Europe/Amsterdam`, UIDs inside one body are unique, and every event has a `DTSTAMP`. The date list matches the nl fixture, including 13 January, 20 January, 22 January, and 29 December.
+- **Dates.** `result.txt` reports `ok 64 events nl+en from /1701DA/25`. Each body, with `UID` and `DTSTAMP` normalized, matches `test/fixtures/afvalwijzer-1701DA-25.nl.ics` or `test/fixtures/afvalwijzer-1701DA-25.en.ics`. Those files include 13 January, 20 January, 22 January, and 29 December.
 
 ## Gotchas
 
-- UIDs are new on every response. Compare dates and summaries, not UIDs, across two fetches.
-- The Worker requests `/nl/1701DA/25/` on the fixture origin for both languages. The en fixture must contain the same pickup lines; it does not supply English month names.
+- UIDs and `DTSTAMP` change on every response. The golden files and the checker replace those lines before the diff.
+- The Worker requests `/nl/1701DA/25/` for both languages. English wording comes from `Accept-Language`, which the en golden calendar records.
 - A postcode inside 1700–1706 that Afvalwijzer does not publish is not this feature. Those requests currently throw, which is not a successful feed.

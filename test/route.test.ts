@@ -6,19 +6,21 @@ import { env } from "cloudflare:workers";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 import worker from "../src/main.ts";
-import enFixtureTemplate from "./fixtures/afvalwijzer-1701DA-25.en.html?raw";
+import enCalendar from "./fixtures/afvalwijzer-1701DA-25.en.ics?raw";
+import nlCalendar from "./fixtures/afvalwijzer-1701DA-25.nl.ics?raw";
 import nlFixtureTemplate from "./fixtures/afvalwijzer-1701DA-25.nl.html?raw";
 import { network } from "./network.ts";
 
 const year = new Date().getUTCFullYear().toString(10);
-const nlHtml = nlFixtureTemplate.replaceAll("YEAR", year);
-const enHtml = enFixtureTemplate.replaceAll("YEAR", year);
-const fixtureHtml = nlHtml;
+const fixtureHtml = nlFixtureTemplate.replaceAll("YEAR", year);
 
-const pickupLines = (html: string): string[] =>
-  [...html.matchAll(/class="span-line-break">([^<]+)</g)].map((match) =>
-    match[1]
-  );
+const normalizeCalendar = (ics: string): string =>
+  ics
+    .replace(/\r\n/g, "\n")
+    .replace(/^UID:.*$/gm, "UID:NORMALIZED")
+    .replace(/^DTSTAMP:.*$/gm, "DTSTAMP:NORMALIZED")
+    .replaceAll(year, "YEAR")
+    .replace(/\s+$/, "") + "\n";
 
 const fetchWorker = async (
   path: string,
@@ -82,17 +84,7 @@ describe("calendar route", () => {
     expect(response.headers.get("Content-Disposition")).toBe(
       'attachment; filename="calendar.ics"',
     );
-    expect(body).toContain("METHOD:REQUEST");
-    expect(body).toContain("Dijk en Waard afvalkalender");
-    expect(body).toContain("SUMMARY:Restafval");
-    expect(body).toContain("SUMMARY:Groente\\, Fruit en Tuinafval");
-    expect(body).toContain("SUMMARY:Plastic\\, Metalen en Drankkartons");
-    expect(body).toContain(`DTSTART;VALUE=DATE:${year}0113`);
-    expect(body).toContain(`DTSTART;VALUE=DATE:${year}0120`);
-    expect(body).toContain(`DTSTART;VALUE=DATE:${year}0122`);
-    expect(body).toContain(`DTSTART;VALUE=DATE:${year}1229`);
-    expect(body.match(/BEGIN:VEVENT/g)).toHaveLength(pickupLines(nlHtml).length);
-    expect(body).toContain("X-PUBLISHED-TTL:P1D");
+    expect(normalizeCalendar(body)).toBe(nlCalendar);
   });
 
   it("returns an English calendar and honors a trailing slash", async () => {
@@ -102,16 +94,7 @@ describe("calendar route", () => {
     const body = await response.text();
 
     expect(response.status).toBe(200);
-    expect(body).toContain("Dijk en Waard Garbage Calendar");
-    expect(body).toContain("SUMMARY:Garbage");
-    expect(body).toContain("SUMMARY:Compostable waste");
-    expect(body).toContain("SUMMARY:Plastic\\, Metal and Drink cartons");
-    expect(body).toContain(`DTSTART;VALUE=DATE:${year}0113`);
-    expect(body.match(/BEGIN:VEVENT/g)).toHaveLength(pickupLines(nlHtml).length);
-  });
-
-  it("stores the same pickup lines for the nl and en upstream pages", () => {
-    expect(pickupLines(enHtml)).toEqual(pickupLines(nlHtml));
+    expect(normalizeCalendar(body)).toBe(enCalendar);
   });
 
   it("embeds a clamped calendar ttl from the worker binding", async () => {

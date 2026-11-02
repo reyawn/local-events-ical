@@ -1,26 +1,23 @@
 #!/usr/bin/env node
-// Serve the saved Afvalwijzer pages on localhost for `wrangler dev`.
+// Serve the saved Afvalwijzer page on localhost for `wrangler dev`.
 // node .cursor/skills/verify-local-events-ical/helpers/serve-fixtures.mjs
 
 import { createServer } from "node:http";
 import {
-  enFixtureName,
   feedPath,
   houseNumber,
+  nlFixtureName,
   postCode,
   readFixtureHtml,
 } from "./fixtures.mjs";
 
 const port = Number(process.env.FIXTURE_PORT ?? 8791);
 const year = Number(process.env.FIXTURE_YEAR ?? new Date().getFullYear());
-const nlHtml = readFixtureHtml("afvalwijzer-1701DA-25.nl.html", year);
-const enHtml = readFixtureHtml(enFixtureName, year);
+const nlHtml = readFixtureHtml(nlFixtureName, year);
 
 const routes = new Map([
   [`/nl/${postCode}/${houseNumber}`, nlHtml],
   [`/nl/${postCode}/${houseNumber}/`, nlHtml],
-  [`/en/${postCode}/${houseNumber}`, enHtml],
-  [`/en/${postCode}/${houseNumber}/`, enHtml],
 ]);
 
 const server = createServer((request, response) => {
@@ -45,5 +42,7 @@ const server = createServer((request, response) => {
 
 server.listen(port, "127.0.0.1", () => {
   console.log(`fixtures listening on http://127.0.0.1:${port}`);
-  console.log(`nl ${feedPath} -> ${nlHtml.includes(`id="jaar-${year}"`) ? "ready" : "missing year"}`);
+  console.log(
+    `nl ${feedPath} -> ${nlHtml.includes(`id="jaar-${year}"`) ? "ready" : "missing year"}`,
+  );
 });

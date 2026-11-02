@@ -21,7 +21,13 @@ npm run dev
 `CALENDAR_TTL` is an optional Worker variable, in seconds. Values are clamped
 from one hour to one week. When it is unset, feeds ask clients to refresh daily.
 
-Saved Afvalwijzer pages for Stadsbedrijf, Beukenlaan 25, 1701 DA Heerhugowaard
-live in `test/fixtures/afvalwijzer-1701DA-25.nl.html` and
-`test/fixtures/afvalwijzer-1701DA-25.en.html`. Refresh them, then re-check the
-feed, with `.cursor/skills/verify-local-events-ical`.
+`AFVALWIJZER_ORIGIN`, when set, is the Afvalwijzer site the Worker fetches.
+Local verification points it at a fixture server. When it is unset, the Worker
+uses `https://www.mijnafvalwijzer.nl`.
+
+The saved page for Stadsbedrijf, Beukenlaan 25, 1701 DA Heerhugowaard is
+`test/fixtures/afvalwijzer-1701DA-25.nl.html`. The Worker always requests the
+`/nl/` page and translates summaries itself. Golden calendars, with `UID` and
+`DTSTAMP` normalized, are `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and
+`test/fixtures/afvalwijzer-1701DA-25.en.ics`. Refresh them with
+`.cursor/skills/verify-local-events-ical`.

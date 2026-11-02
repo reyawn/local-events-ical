@@ -50,7 +50,7 @@ The fixture server answers `ok`. The Worker answers `400` with `Invalid address`
 
 ## Drive
 
-`check-feed.mjs` curls the feed in `nl` and `en`, then the 400 and 404 paths. It compares every event to `test/fixtures/afvalwijzer-1701DA-25.nl.html`. The Worker only fetches the `/nl/` fixture; English summaries come from `Accept-Language`.
+`check-feed.mjs` curls the feed in `nl` and `en`, then the 400 and 404 paths. It diffs each calendar, after replacing `UID` and `DTSTAMP`, with `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and `test/fixtures/afvalwijzer-1701DA-25.en.ics`. The Worker only fetches the `/nl/` HTML fixture. English summaries come from `Accept-Language`.
 
 ```sh
 node .cursor/skills/verify-local-events-ical/helpers/check-feed.mjs \
@@ -62,7 +62,7 @@ Feature recipes are under `features/`. Drive the file that matches the change. O
 
 ## Evidence
 
-`check-feed.mjs` writes the response headers and bodies into `--out` (`$RUN` above): `nl.body`, `en.body`, `invalid.body`, `lowercase.body`, `unsupported.body`, and `result.txt`. A passing run prints `ok 64 events nl+en from /1701DA/25` and exits 0. Keep that directory. Compare dates and summaries, not UIDs.
+`check-feed.mjs` writes the response headers and bodies into `--out` (`$RUN` above): `nl.body`, `en.body`, `invalid.body`, `lowercase.body`, `unsupported.body`, and `result.txt`. A passing run prints `ok 64 events nl+en from /1701DA/25` and exits 0. Keep that directory. The pass means the normalized bodies match the golden `.ics` files.
 
 ## Cleanup
 
@@ -78,6 +78,6 @@ Do not delete `$RUN`.
 
 - `node .cursor/skills/verify-local-events-ical/helpers/serve-fixtures.mjs` serves the fixtures. `FIXTURE_PORT` defaults to `8791`.
 - `node .cursor/skills/verify-local-events-ical/helpers/check-feed.mjs --base http://127.0.0.1:8787 --out <dir>` asserts the feed and writes evidence.
-- `node .cursor/skills/verify-local-events-ical/helpers/refresh-fixtures.mjs` re-downloads both Afvalwijzer pages and rewrites `test/fixtures/afvalwijzer-1701DA-25.nl.html` and `test/fixtures/afvalwijzer-1701DA-25.en.html`. Run it when the municipal calendar changes, then rerun `npm test` and this skill. The pages are Stadsbedrijf, Beukenlaan 25. The script strips the pages down to the `jaar` pickup paragraphs and writes `jaar-YEAR` so the year id can be substituted. If the January dates or the pickup count change, update the spot-check dates in `test/route.test.ts` and the count named in `features/calendar-feed.md`.
+- `node .cursor/skills/verify-local-events-ical/helpers/refresh-fixtures.mjs` re-downloads the nl Afvalwijzer page and rewrites `test/fixtures/afvalwijzer-1701DA-25.nl.html`. The Worker does not fetch `/en/`. Run it when the municipal calendar changes, then rerun this skill. The page is Stadsbedrijf, Beukenlaan 25. The script keeps the `jaar` pickup paragraphs and writes `jaar-YEAR` so the year id can be substituted. If the normalized calendars differ, replace `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and `test/fixtures/afvalwijzer-1701DA-25.en.ics` with the checker output (`UID` and `DTSTAMP` lines normalized, calendar year written as `YEAR`). Update the count named in `features/calendar-feed.md` when the pickup count changes.
 
 `/maintain-verification-skill` is the upkeep loop when routes or fixture shape change.

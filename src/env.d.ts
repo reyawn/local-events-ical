@@ -3,7 +3,6 @@
 // wrangler.jsonc and regenerate types before setting a deployed value.
 interface Env {
   CALENDAR_TTL?: string;
-  // Local verification points this at a fixture server. Unset uses the public site.
   AFVALWIJZER_ORIGIN?: string;
 }
 
