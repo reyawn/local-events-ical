@@ -44,7 +44,6 @@ const addressUrl = (address: Address): string =>
     address.houseNumber.toString(10)
   }/`;
 
-// The first class token is the waste type. Later tokens are layout classes.
 const firstClassToken = (classAttribute: string | null): string =>
   classAttribute?.split(/\s+/)[0] ?? "";
 
@@ -76,7 +75,15 @@ export const collectPickupParagraphs = async (
   return paragraphs;
 };
 
-// First line is "weekday day month", matching the previous textContent split.
+const weekdayDayMonth = (line: string | undefined): {
+  weekday?: string;
+  day?: string;
+  month?: string;
+} => {
+  const [weekday, day, month] = line?.split(" ") ?? [];
+  return { weekday, day, month };
+};
+
 export const pickupEventFromParagraph = (
   { pickupType, text }: PickupParagraph,
   year: string,
@@ -86,11 +93,9 @@ export const pickupEventFromParagraph = (
     throw new Error(`Unknown pickup type: ${pickupType}`);
   }
 
-  const [
-    ,
-    monthDayFromOne,
-    dutchMonth,
-  ] = text.trim().split("\n")[0]?.split(" ") ?? [];
+  const { day: monthDayFromOne, month: dutchMonth } = weekdayDayMonth(
+    text.trim().split("\n")[0],
+  );
 
   if (typeof monthDayFromOne !== "string" || typeof dutchMonth !== "string") {
     throw new Error(`Invalid date: ${text}`);

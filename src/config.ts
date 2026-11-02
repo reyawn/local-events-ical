@@ -22,7 +22,6 @@ const numberWithinBounds = (
   return number;
 };
 
-// Workers pass bindings on the request. An absent value keeps the one-day default.
 export const calendarTtl = (raw?: string): number =>
   numberWithinBounds(stringToNumber(raw) ?? ONE_DAY, {
     min: ONE_HOUR,
