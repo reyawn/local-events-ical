@@ -12,6 +12,10 @@ export type EventSource = InternalEventSource<PickupEventType>;
 
 const NAME = "Afvalwijzer";
 const USER_AGENT = "local-events-ical";
+const DEFAULT_ORIGIN = "https://www.mijnafvalwijzer.nl";
+
+const originBase = (origin?: string): string =>
+  (origin ? origin : DEFAULT_ORIGIN).replace(/\/$/, "");
 
 const PickupTypeReverseMap = new Map<string, PickupEventType>([
   ["restafval", PickupEventType.Restafval],
@@ -39,8 +43,8 @@ export interface PickupParagraph {
   text: string;
 }
 
-const addressUrl = (address: Address): string =>
-  `https://www.mijnafvalwijzer.nl/nl/${address.postCode}/${
+const addressUrl = (address: Address, origin?: string): string =>
+  `${originBase(origin)}/nl/${address.postCode}/${
     address.houseNumber.toString(10)
   }/`;
 
@@ -121,8 +125,11 @@ export const parsePickupEvents = async (
   return pickupEvents;
 };
 
-const fetchAddressPage = async (address: Address): Promise<Response> => {
-  return await fetch(addressUrl(address), {
+const fetchAddressPage = async (
+  address: Address,
+  origin?: string,
+): Promise<Response> => {
+  return await fetch(addressUrl(address, origin), {
     headers: {
       "Accept": "text/html",
       "User-Agent": USER_AGENT,
@@ -133,17 +140,18 @@ const fetchAddressPage = async (address: Address): Promise<Response> => {
 const fetchPickupEvents = async (
   address: Address,
   year: string,
+  origin?: string,
 ): Promise<Array<PickupEvent<PickupEventType>>> => {
-  const page = await fetchAddressPage(address);
+  const page = await fetchAddressPage(address, origin);
   return await parsePickupEvents(page, year);
 };
 
 const fetchLocalizedPickupEvents = async (
   address: Address,
   year: string,
-  { locale }: FetchPickupEventsOptions,
+  { locale, origin }: FetchPickupEventsOptions,
 ): Promise<Array<LocalizedPickupEvent<PickupEventType>>> => {
-  const pickupEvents = await fetchPickupEvents(address, year);
+  const pickupEvents = await fetchPickupEvents(address, year, origin);
 
   return pickupEvents.map(({ date, type }) => {
     const localized = {
