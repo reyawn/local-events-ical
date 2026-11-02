@@ -20,10 +20,12 @@ export const readFixtureHtml = (
   year = new Date().getFullYear(),
 ) => readFileSync(fixtureFile(name), "utf8").replaceAll("YEAR", String(year));
 
-export const normalizeCalendar = (ics, year = new Date().getFullYear()) =>
+export const normalizeCalendar = (ics) =>
   ics
     .replace(/\r\n/g, "\n")
-    .replace(/^UID:.*$/gm, "UID:NORMALIZED")
     .replace(/^DTSTAMP:.*$/gm, "DTSTAMP:NORMALIZED")
-    .replaceAll(String(year), "YEAR")
+    .replace(
+      /^DTSTART(;[^:]*)?:\d{4}/gm,
+      (_match, params = "") => `DTSTART${params}:YEAR`,
+    )
     .replace(/\s+$/, "") + "\n";

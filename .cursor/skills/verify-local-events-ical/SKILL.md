@@ -50,7 +50,7 @@ The fixture server answers `ok`. The Worker answers `400` with `Invalid address`
 
 ## Drive
 
-`check-feed.mjs` curls the feed in `nl` and `en`, then the 400 and 404 paths. It diffs each calendar, after replacing `UID` and `DTSTAMP`, with `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and `test/fixtures/afvalwijzer-1701DA-25.en.ics`. The Worker only fetches the `/nl/` HTML fixture. English summaries come from `Accept-Language`.
+`check-feed.mjs` curls the feed in `nl` and `en`, then the 400 and 404 paths. It diffs each calendar, after replacing `DTSTAMP`, with `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and `test/fixtures/afvalwijzer-1701DA-25.en.ics`. UIDs stay in the diff. The Worker only fetches the `/nl/` HTML fixture. English summaries come from `Accept-Language`.
 
 ```sh
 node .cursor/skills/verify-local-events-ical/helpers/check-feed.mjs \
@@ -78,6 +78,6 @@ Do not delete `$RUN`.
 
 - `node .cursor/skills/verify-local-events-ical/helpers/serve-fixtures.mjs` serves the fixtures. `FIXTURE_PORT` defaults to `8791`.
 - `node .cursor/skills/verify-local-events-ical/helpers/check-feed.mjs --base http://127.0.0.1:8787 --out <dir>` asserts the feed and writes evidence.
-- `node .cursor/skills/verify-local-events-ical/helpers/refresh-fixtures.mjs` re-downloads the nl Afvalwijzer page and rewrites `test/fixtures/afvalwijzer-1701DA-25.nl.html`. The Worker does not fetch `/en/`. Run it when the municipal calendar changes, then rerun this skill. The page is Stadsbedrijf, Beukenlaan 25. The script keeps the `jaar` pickup paragraphs and writes `jaar-YEAR` so the year id can be substituted. If the normalized calendars differ, replace `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and `test/fixtures/afvalwijzer-1701DA-25.en.ics` with the checker output (`UID` and `DTSTAMP` lines normalized, calendar year written as `YEAR`). Update the count named in `features/calendar-feed.md` when the pickup count changes.
+- `node .cursor/skills/verify-local-events-ical/helpers/refresh-fixtures.mjs` re-downloads the nl Afvalwijzer page and rewrites `test/fixtures/afvalwijzer-1701DA-25.nl.html`. The Worker does not fetch `/en/`. Run it when the municipal calendar changes, then rerun this skill. The page is Stadsbedrijf, Beukenlaan 25. The script keeps the `jaar` pickup paragraphs and writes `jaar-YEAR` so the year id can be substituted. If the normalized calendars differ, replace `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and `test/fixtures/afvalwijzer-1701DA-25.en.ics` with the checker output (`DTSTAMP` normalized, `DTSTART` year written as `YEAR`, UIDs left as emitted). Update the count named in `features/calendar-feed.md` when the pickup count changes.
 
 `/maintain-verification-skill` is the upkeep loop when routes or fixture shape change.

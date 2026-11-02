@@ -17,10 +17,17 @@ const fixtureHtml = nlFixtureTemplate.replaceAll("YEAR", year);
 const normalizeCalendar = (ics: string): string =>
   ics
     .replace(/\r\n/g, "\n")
-    .replace(/^UID:.*$/gm, "UID:NORMALIZED")
     .replace(/^DTSTAMP:.*$/gm, "DTSTAMP:NORMALIZED")
-    .replaceAll(year, "YEAR")
+    .replace(
+      /^DTSTART(;[^:]*)?:(\d{4})/gm,
+      (_match, params = "") => `DTSTART${params}:YEAR`,
+    )
     .replace(/\s+$/, "") + "\n";
+
+const eventUids = (ics: string): string[] => {
+  const unfolded = ics.replace(/\r\n[ \t]/g, "").replace(/\n[ \t]/g, "");
+  return [...unfolded.matchAll(/^UID:(.*)$/gm)].map((match) => match[1].trim());
+};
 
 const fetchWorker = async (
   path: string,
@@ -95,6 +102,28 @@ describe("calendar route", () => {
 
     expect(response.status).toBe(200);
     expect(normalizeCalendar(body)).toBe(enCalendar);
+  });
+
+  it("reuses one uid per pickup across fetches and languages", async () => {
+    const first = await fetchWorker("/1701DA/25", {
+      headers: { "Accept-Language": "nl" },
+    });
+    const second = await fetchWorker("/1701DA/25", {
+      headers: { "Accept-Language": "nl" },
+    });
+    const english = await fetchWorker("/1701DA/25", {
+      headers: { "Accept-Language": "en" },
+    });
+    const firstBody = await first.text();
+    const secondBody = await second.text();
+    const englishBody = await english.text();
+    const dutchUids = eventUids(firstBody);
+    const englishUids = eventUids(englishBody);
+
+    expect(normalizeCalendar(firstBody)).toBe(normalizeCalendar(secondBody));
+    expect(englishUids).toEqual(dutchUids);
+    expect(new Set(dutchUids).size).toBe(dutchUids.length);
+    expect(dutchUids[0]).toMatch(/^[0-9a-f]{64}@local-events-ical$/);
   });
 
   it("embeds a clamped calendar ttl from the worker binding", async () => {
