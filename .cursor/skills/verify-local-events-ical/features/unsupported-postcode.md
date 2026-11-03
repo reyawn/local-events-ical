@@ -21,4 +21,4 @@ Preconditions:
 ## Gotchas
 
 - `1000AA` is outside Dijk en Waard (`1700`–`1706`, `1720`–`1724`, `1830`–`1834`). `1707AA` is also 404.
-- A prefix inside that list whose house number Afvalwijzer does not publish, such as `/1703EZ/1`, is not this feature. The Worker fetches it and currently responds 500 when the page has no pickup paragraphs. Do not record that 500 as a passing 404 check.
+- A prefix inside that list whose house number Afvalwijzer does not publish, such as `/1703EZ/1`, is not this feature. That response is `404` with body `Address not found`. Do not record it as `Unknown or unsupported postcode`.

@@ -7,7 +7,7 @@ import {
 import { lookupCityConfigurationForPostCode } from "./cities/index.ts";
 import { calendarTtl, DEFAULT_LANGUAGE } from "./config.ts";
 import { cachedFeed } from "./feedCache.ts";
-import type { SupportedLocale } from "./types.ts";
+import { AddressNotFound, type SupportedLocale } from "./types.ts";
 
 const pathRegex =
   /^\/(?<postCode>\d{4}[A-Z]{2})\/(?<houseNumber>\d{1,5})\/?$/;
@@ -17,6 +17,9 @@ const worker = {
     try {
       return await calendarResponse(request, env);
     } catch (error) {
+      if (error instanceof AddressNotFound) {
+        return new Response(error.message, { status: 404 });
+      }
       console.error(JSON.stringify({
         message: "request failed",
         error: error instanceof Error ? error.message : String(error),

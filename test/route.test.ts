@@ -11,6 +11,7 @@ import { SupportedLocale } from "../src/types.ts";
 import enCalendar from "./fixtures/afvalwijzer-1701DA-25.en.ics?raw";
 import nlCalendar from "./fixtures/afvalwijzer-1701DA-25.nl.ics?raw";
 import nlFixtureTemplate from "./fixtures/afvalwijzer-1701DA-25.nl.html?raw";
+import errorPageHtml from "./fixtures/afvalwijzer-1703EZ-1.error.html?raw";
 import { network } from "./network.ts";
 
 const year = new Date().getUTCFullYear().toString(10);
@@ -81,6 +82,96 @@ describe("calendar route", () => {
 
     expect(response.status).toBe(400);
     expect(await response.text()).toBe("Invalid address");
+  });
+
+  it("returns 404 when Afvalwijzer redirects the address to its error page", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/1703EZ/1/",
+        () =>
+          new HttpResponse(null, {
+            status: 302,
+            headers: { Location: "https://www.mijnafvalwijzer.nl/error" },
+          }),
+      ),
+    );
+
+    const response = await fetchWorker("/1703EZ/1");
+
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe("Address not found");
+  });
+
+  it("returns 404 when the address page has no pickup schedule", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => HttpResponse.html(errorPageHtml),
+      ),
+    );
+
+    const response = await fetchWorker("/1703EZ/1");
+
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe("Address not found");
+  });
+
+  it("does not treat an unrelated redirect as a missing address", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () =>
+          new HttpResponse(null, {
+            status: 302,
+            headers: {
+              Location: "https://www.mijnafvalwijzer.nl/somewhere-else",
+            },
+          }),
+      ),
+    );
+
+    await expect(fetchWorker("/1703EZ/1")).rejects.toThrow(
+      "Afvalwijzer redirected to https://www.mijnafvalwijzer.nl/somewhere-else",
+    );
+  });
+
+  it("does not report an Afvalwijzer server error as a missing address", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => new HttpResponse("unavailable", { status: 503 }),
+      ),
+    );
+
+    await expect(fetchWorker("/1701DA/25")).rejects.toThrow(
+      "Afvalwijzer returned 503",
+    );
+  });
+
+  it("does not report a network failure as a missing address", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => HttpResponse.error(),
+      ),
+    );
+
+    await expect(fetchWorker("/1701DA/25")).rejects.toThrow();
+  });
+
+  it("does not report an unparseable pickup page as a missing address", async () => {
+    const html =
+      `<div id="jaar-${year}"><p class="papier">vrijdag 09 januari</p></div>`;
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => HttpResponse.html(html),
+      ),
+    );
+
+    await expect(fetchWorker("/1701DA/25")).rejects.toThrow(
+      "Unknown pickup type: papier",
+    );
   });
 
   it("rejects an unsupported postcode", async () => {
@@ -205,24 +296,30 @@ describe("calendar route", () => {
     expect(notModified.headers.get("Vary")).toBe("Accept-Language");
   });
 
-  it("fetches again when the address page has no pickups", async () => {
+  it("does not cache an address Afvalwijzer does not publish", async () => {
     let fetches = 0;
     network.use(
-      http.get(
-        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
-        () => {
-          fetches += 1;
-          return HttpResponse.html(`<div id="jaar-${year}"></div>`);
-        },
-      ),
+      http.get("https://www.mijnafvalwijzer.nl/nl/1703EZ/1/", () => {
+        fetches += 1;
+        return new HttpResponse(null, {
+          status: 302,
+          headers: { Location: "https://www.mijnafvalwijzer.nl/error" },
+        });
+      }),
     );
 
-    await expect(fetchWorker("/1701DA/25")).rejects.toThrow(
-      "No pickup events found",
-    );
-    await expect(fetchWorker("/1701DA/25")).rejects.toThrow(
-      "No pickup events found",
-    );
+    const first = await fetchWorker("/1703EZ/1");
+    const second = await fetchWorker("/1703EZ/1");
+
     expect(fetches).toBe(2);
+    expect(first.status).toBe(404);
+    expect(await first.text()).toBe("Address not found");
+    expect(second.status).toBe(404);
+    expect(await second.text()).toBe("Address not found");
+    for (const response of [first, second]) {
+      expect(response.headers.get("Cache-Control")).toBeNull();
+      expect(response.headers.get("ETag")).toBeNull();
+      expect(response.headers.get("Vary")).toBeNull();
+    }
   });
 });

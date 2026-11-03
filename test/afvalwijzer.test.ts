@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import fixtureTemplate from "./fixtures/address.html?raw";
+import errorPage from "./fixtures/afvalwijzer-1703EZ-1.error.html?raw";
 import {
   parsePickupEvents,
   pickupEventFromParagraph,
 } from "../src/eventSources/afvalwijzer/index.ts";
 import { PickupEventType } from "../src/eventSources/afvalwijzer/types.ts";
+import { AddressNotFound } from "../src/types.ts";
 
 const year = new Date().getUTCFullYear().toString(10);
 
@@ -36,12 +38,19 @@ describe("Afvalwijzer parser", () => {
     expect(isoDate(event.date)).toBe(`${year}-01-16`);
   });
 
-  it("throws when the year section has no pickup paragraphs", async () => {
+  it("reports a year section with no pickup paragraphs as address not found", async () => {
     const html = `<div id="jaar-${year}"></div>`;
 
     await expect(parsePickupEvents(new Response(html), year)).rejects.toThrow(
-      "No pickup events found",
+      AddressNotFound,
     );
+  });
+
+  it("reports the stored Afvalwijzer error page as address not found", async () => {
+    expect(errorPage).toContain("Pagina niet gevonden");
+
+    await expect(parsePickupEvents(new Response(errorPage), year)).rejects
+      .toThrow(AddressNotFound);
   });
 
   it("throws when the first class token is an unknown waste type", () => {

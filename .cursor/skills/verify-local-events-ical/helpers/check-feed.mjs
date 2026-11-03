@@ -10,6 +10,7 @@ import {
   feedPath,
   fixtureFile,
   houseNumber,
+  missingFeedPath,
   nlCalendarName,
   normalizeCalendar,
   postCode,
@@ -121,6 +122,7 @@ await checkStatus(
   "lowercase",
 );
 await checkStatus("/1000AA/1", 404, "Unknown or unsupported postcode", "unsupported");
+await checkStatus(missingFeedPath, 404, "Address not found", "missing");
 
 const events = (readFileSync(fixtureFile(nlCalendarName), "utf8").match(
   /^BEGIN:VEVENT$/gm,

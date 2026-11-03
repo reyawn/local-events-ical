@@ -37,12 +37,11 @@ Preconditions:
   curl -fsS "http://127.0.0.1:$FIXTURE_PORT/hits"
   ```
 
-  Both locales answer `200` with `content-type: text/calendar; charset=utf-8` and `cache-control: public, max-age=86400` (or the clamped `CALENDAR_TTL` when that variable is set). `/hits` is `2`: one Dutch scrape and one English scrape. A second `nl` or `en` request does not increase it. `etag` is present. Sending that value back as `If-None-Match` answers `304`.
+  Both locales answer `200` with `content-type: text/calendar; charset=utf-8`, `cache-control: public, max-age=86400` (or the clamped `CALENDAR_TTL` when that variable is set), and `vary: Accept-Language`. `/hits` is `2`: one Dutch scrape and one English scrape. A second `nl` or `en` request does not increase it. `etag` is present. Sending that value back as `If-None-Match` answers `304` with the same `vary`.
 
 ## Gotchas
 
 - `DTSTAMP` is the time the feed was generated. A cache hit repeats that value until the entry expires. The golden files and the checker replace that line before the diff. UIDs stay.
-- The Worker requests `/nl/1701DA/25/` for both languages, once per locale per cache lifetime. English wording comes from the resolved locale, which the en golden calendar records. The cache key is that locale, `en` or `nl`, not the raw `Accept-Language` header. `nl` and `nl-NL,nl;q=0.9,en;q=0.8` share an entry. `en` is the default when the header is missing or names neither language.
-- `GET /hits` on the fixture server counts Afvalwijzer pages served. `/health` does not.
-- A 404 or a scrape that finds no pickups is not stored. The next request fetches again.
-- A postcode inside 1700–1706 that Afvalwijzer does not publish is not this feature. Those requests currently throw, which is not a successful feed.
+- The Worker requests `/nl/1701DA/25/` for both languages, once per locale per cache lifetime. English wording comes from the resolved locale, which the en golden calendar records. The cache key is that locale, `en` or `nl`, not the raw `Accept-Language` header. `nl` and `nl-NL,nl;q=0.9,en;q=0.8` share an entry. `en` is the default when the header is missing or names neither language. `Vary: Accept-Language` is on the response so a cache in front of the Worker does not mix those bodies.
+- `GET /hits` on the fixture server counts Afvalwijzer address requests, including the `/1703EZ/1` redirect. `/health` and `/error` do not count.
+- A postcode inside 1700–1706 that Afvalwijzer does not publish is not this feature. `/1703EZ/1` returns `404` with body `Address not found`, and that response is not cached.

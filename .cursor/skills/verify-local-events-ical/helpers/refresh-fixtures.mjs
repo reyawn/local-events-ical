@@ -1,11 +1,19 @@
 #!/usr/bin/env node
-// Re-download the Beukenlaan 25 nl page and rewrite the HTML fixture.
+// Re-download the Beukenlaan 25 nl page and the 1703EZ/1 error response.
 // The Worker never fetches /en/. After this, re-run the feed check and
 // replace the golden .ics files if the normalized calendars changed.
 // node .cursor/skills/verify-local-events-ical/helpers/refresh-fixtures.mjs
 
 import { writeFileSync } from "node:fs";
-import { fixtureFile, houseNumber, nlFixtureName, postCode } from "./fixtures.mjs";
+import {
+  errorFixtureName,
+  fixtureFile,
+  houseNumber,
+  missingHouseNumber,
+  missingPostCode,
+  nlFixtureName,
+  postCode,
+} from "./fixtures.mjs";
 
 const url = `https://www.mijnafvalwijzer.nl/nl/${postCode}/${houseNumber}/`;
 const tagPattern = /<(\/?)(div|p)\b([^>]*)>/gi;
@@ -70,12 +78,45 @@ const extractPickups = (html) => {
   return { pageYear: open[1], pickups };
 };
 
+const requestHeaders = {
+  "Accept": "text/html",
+  "Accept-Language": "nl",
+  "User-Agent": "local-events-ical",
+};
+
+const captureMissingAddress = async () => {
+  const missingUrl =
+    `https://www.mijnafvalwijzer.nl/nl/${missingPostCode}/${missingHouseNumber}/`;
+  const redirected = await fetch(missingUrl, {
+    headers: requestHeaders,
+    redirect: "manual",
+  });
+  if (redirected.status < 300 || redirected.status >= 400) {
+    throw new Error(`${missingUrl} returned ${redirected.status}`);
+  }
+
+  const location = redirected.headers.get("location");
+  const target = location ? new URL(location, missingUrl) : null;
+  if (!target || target.pathname.replace(/\/+$/, "") !== "/error") {
+    throw new Error(`${missingUrl} redirected to ${location}`);
+  }
+
+  const errorPage = await fetch(target, {
+    headers: requestHeaders,
+    redirect: "manual",
+  });
+  if (errorPage.status !== 404) {
+    throw new Error(`${target.href} returned ${errorPage.status}`);
+  }
+
+  const bytes = Buffer.from(await errorPage.arrayBuffer());
+  const file = fixtureFile(errorFixtureName);
+  writeFileSync(file, bytes);
+  console.log(`${file} ${bytes.length} bytes`);
+};
+
 const response = await fetch(url, {
-  headers: {
-    "Accept": "text/html",
-    "Accept-Language": "nl",
-    "User-Agent": "local-events-ical",
-  },
+  headers: requestHeaders,
   redirect: "follow",
 });
 
@@ -108,3 +149,4 @@ console.log(`${file} ${pickups.length} pickups`);
 console.log(
   "Re-run the feed check. If the normalized calendars differ, replace test/fixtures/afvalwijzer-1701DA-25.nl.ics and afvalwijzer-1701DA-25.en.ics. Keep the emitted UIDs.",
 );
+await captureMissingAddress();
