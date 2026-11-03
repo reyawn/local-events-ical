@@ -1,10 +1,11 @@
 import i18n from "./i18n.ts";
-import type {
-  Address,
-  EventSource as InternalEventSource,
-  FetchPickupEventsOptions,
-  LocalizedPickupEvent,
-  PickupEvent,
+import {
+  AddressNotFound,
+  type Address,
+  type EventSource as InternalEventSource,
+  type FetchPickupEventsOptions,
+  type LocalizedPickupEvent,
+  type PickupEvent,
 } from "../../types.ts";
 import { PickupEventType } from "./types.ts";
 
@@ -124,22 +125,48 @@ export const parsePickupEvents = async (
   );
 
   if (pickupEvents.length === 0) {
-    throw new Error("No pickup events found");
+    throw new AddressNotFound();
   }
 
   return pickupEvents;
+};
+
+const ERROR_PATH = "/error";
+
+const isErrorRedirect = (response: Response, requestUrl: string): boolean => {
+  if (response.status < 300 || response.status >= 400) {
+    return false;
+  }
+  const location = response.headers.get("Location");
+  if (!location) {
+    return false;
+  }
+  return new URL(location, requestUrl).pathname.replace(/\/+$/, "") ===
+    ERROR_PATH;
 };
 
 const fetchAddressPage = async (
   address: Address,
   origin?: string,
 ): Promise<Response> => {
-  return await fetch(addressUrl(address, origin), {
+  const url = addressUrl(address, origin);
+  const response = await fetch(url, {
     headers: {
       "Accept": "text/html",
       "User-Agent": USER_AGENT,
     },
+    redirect: "manual",
   });
+
+  if (isErrorRedirect(response, url)) {
+    throw new AddressNotFound();
+  }
+  if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get("Location");
+    throw new Error(`Afvalwijzer redirected to ${location ?? response.url}`);
+  }
+
+  return response;
 };
 
 const fetchPickupEvents = async (
@@ -148,6 +175,9 @@ const fetchPickupEvents = async (
   origin?: string,
 ): Promise<Array<PickupEvent<PickupEventType>>> => {
   const page = await fetchAddressPage(address, origin);
+  if (!page.ok) {
+    throw new Error(`Afvalwijzer returned ${page.status}`);
+  }
   return await parsePickupEvents(page, year);
 };
 
