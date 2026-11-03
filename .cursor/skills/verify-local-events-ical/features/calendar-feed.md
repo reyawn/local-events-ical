@@ -29,4 +29,4 @@ Preconditions:
 
 - `DTSTAMP` changes on every response. The golden files and the checker replace that line before the diff. UIDs stay.
 - The Worker requests `/nl/1701DA/25/` for both languages. English wording comes from `Accept-Language`, which the en golden calendar records.
-- A postcode inside 1700–1706 that Afvalwijzer does not publish is not this feature. Those requests currently throw, which is not a successful feed.
+- A postcode inside 1700–1706 that Afvalwijzer does not publish is not this feature. `/1703EZ/1` returns `404` with body `Address not found`.

@@ -27,6 +27,13 @@ export interface FetchPickupEventsOptions {
   origin?: string;
 }
 
+export class AddressNotFound extends Error {
+  constructor() {
+    super("Address not found");
+    this.name = "AddressNotFound";
+  }
+}
+
 type FetchLocalizedPickupEvents<
   PickupEventType extends EveryPickupEventType,
 > = (

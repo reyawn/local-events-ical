@@ -1,10 +1,11 @@
 import i18n from "./i18n.ts";
-import type {
-  Address,
-  EventSource as InternalEventSource,
-  FetchPickupEventsOptions,
-  LocalizedPickupEvent,
-  PickupEvent,
+import {
+  AddressNotFound,
+  type Address,
+  type EventSource as InternalEventSource,
+  type FetchPickupEventsOptions,
+  type LocalizedPickupEvent,
+  type PickupEvent,
 } from "../../types.ts";
 import { PickupEventType } from "./types.ts";
 
@@ -124,22 +125,45 @@ export const parsePickupEvents = async (
   );
 
   if (pickupEvents.length === 0) {
-    throw new Error("No pickup events found");
+    throw new AddressNotFound();
   }
 
   return pickupEvents;
 };
 
+const ERROR_PATH = "/error";
+
+const pathnameOf = (value: string, base: string): string =>
+  new URL(value, base).pathname.replace(/\/+$/, "");
+
 const fetchAddressPage = async (
   address: Address,
   origin?: string,
 ): Promise<Response> => {
-  return await fetch(addressUrl(address, origin), {
+  const url = addressUrl(address, origin);
+  const response = await fetch(url, {
     headers: {
       "Accept": "text/html",
       "User-Agent": USER_AGENT,
     },
+    redirect: "manual",
   });
+
+  const location = response.headers.get("Location");
+  const followedErrorPage = response.redirected &&
+    pathnameOf(response.url, url) === ERROR_PATH;
+  const manualErrorRedirect = response.status >= 300 &&
+    response.status < 400 &&
+    location !== null &&
+    pathnameOf(location, url) === ERROR_PATH;
+  if (followedErrorPage || manualErrorRedirect) {
+    throw new AddressNotFound();
+  }
+  if (response.status >= 300 && response.status < 400) {
+    throw new Error(`Afvalwijzer redirected to ${location ?? response.url}`);
+  }
+
+  return response;
 };
 
 const fetchPickupEvents = async (
@@ -148,6 +172,9 @@ const fetchPickupEvents = async (
   origin?: string,
 ): Promise<Array<PickupEvent<PickupEventType>>> => {
   const page = await fetchAddressPage(address, origin);
+  if (!page.ok) {
+    throw new Error(`Afvalwijzer returned ${page.status}`);
+  }
   return await parsePickupEvents(page, year);
 };
 

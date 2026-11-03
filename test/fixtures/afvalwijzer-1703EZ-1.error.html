@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="nl" lang="nl">
+
+<head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, shrink-to-fit=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="author" content="MV Infoprojects B.V.">
+
+    
+            <meta name="apple-itunes-app" content="app-id=479597294">
+            <!-- <meta name="msApplication-ID" content="App" />
+            <meta name="msApplication-WinPhonePackageUrl" content="7af3054b-4936-4c34-be29-9b527459ef06" /> -->
+            <meta name="google-play-app" content="app-id=nl.addcomm.afvalwijzer">
+
+            
+    <!-- NEW TEMPLATE RELATED -->
+    <!-- Load custom font -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;700&display=swap" rel="stylesheet" /> -->
+    <style>
+        /* latin-ext */
+        @font-face {
+            font-family: 'Rethink Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: url(/themes/afvalwijzer/fonts/google/google-font-rethink-sans-latin-ext.woff2) format('woff2');
+            unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+        }
+
+        /* latin */
+        @font-face {
+            font-family: 'Rethink Sans';
+            font-style: normal;
+            font-weight: 400;
+            src: url(/themes/afvalwijzer/fonts/google/google-font-rethink-sans-latin.woff2) format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+        }
+    </style>
+
+    <!-- Tailwind CDN -->
+    <!-- <script src="/themes/afvalwijzer/js/tailwind-3.4.16.js"></script> -->
+    <script src="/themes/afvalwijzer/js/tailwind-3.4.16.js"></script>
+
+    <!-- Set Tailwind default font to Rethink Sans -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["'Rethink Sans'", 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+
+    <!-- Font Awesome icons -->
+    <link rel="stylesheet" href="/themes/afvalwijzer/css/default/font-awesome-6.5.0-all.min.css" />
+
+    <style>
+        /* Apply font globally */
+        html,
+        .font-sans {
+            font-family: 'Rethink Sans', sans-serif !important;
+        }
+
+        .primary-bg-color {
+            background-color: #108359;
+        }
+
+        /* Sticky header styles */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            z-index: 50;
+        }
+
+        header.scrolled {
+            transform: translateY(0);
+        }
+
+        header:not(.scrolled) {
+            transform: translateY(-2px);
+        }
+
+        .hide {
+            display: none;
+        }
+
+        /* Show mobile nav between 1024–1153px */
+        @media (max-width: 1300px) and (min-width: 1024px) {
+            .nav-desktop {
+                display: none !important;
+            }
+
+            .nav-mobile {
+                display: flex !important;
+            }
+        }
+
+        /* GLOBAL SCROLLBARS (main page) */
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            width: 10px;
+            background-color: rgb(44, 44, 44);
+            /* dark track */
+        }
+
+        html::-webkit-scrollbar-thumb,
+        body::-webkit-scrollbar-thumb {
+            background-color: #9f9f9f;
+            /* grey thumb */
+            border-radius: 8px;
+        }
+
+        /* Firefox (main page) — default width */
+        html,
+        body {
+            scrollbar-color: #9f9f9f rgb(44, 44, 44);
+            /* Removed scrollbar-width: thin to keep default size */
+        }
+
+        /* SIDE PANEL SCROLLBAR */
+        #side-panel::-webkit-scrollbar {
+            width: 10px;
+            background-color: #e0f2ed;
+            /* light side panel background */
+        }
+
+        #side-panel::-webkit-scrollbar-thumb {
+            background-color: #108359;
+            border-radius: 8px;
+        }
+
+        /* Firefox (side panel) — thin scrollbar */
+        #side-panel {
+            scrollbar-color: #108359 #e0f2ed;
+            scrollbar-width: thin;
+        }
+
+        .custom-placeholder::placeholder {
+            color: rgb(193, 191, 191) !important;
+        }
+
+        @media (max-width: 767px) {
+            P {
+                width: 100% !important;
+            }
+        }
+
+        input[type="submit"],
+        input[type="button"] {
+            height: 45px !important;
+            border-top: 1px solid transparent !important;
+            ;
+            border-right: 1px solid transparent !important;
+            ;
+            border-bottom: 1px solid transparent !important;
+            ;
+            border-left: 1px solid transparent !important;
+            ;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        select {
+            padding: 5px 5px 5px 15px;
+            height: 45px !important;
+        }
+
+        .diftar-login .login-button {
+            margin-top: 0px !important;
+            margin-bottom: 0px !important;
+            margin-left: 0px !important;
+            margin-right: 0px !important;
+        }
+
+        .container-fluid {
+            min-height: 80vh;
+        }
+
+        .column p:before {
+            width: 66px !important;
+        }
+
+        .column p {
+            border-bottom: none !important;
+        }
+
+        .request-selector {
+            width: 105px !important;
+            border-bottom: none !important;
+        }
+
+        .afvalShopCategories {
+            width: 100% !important;
+        }
+
+        menu,
+        ol,
+        ul {
+            list-style: disc !important;
+            margin: 1em 0 !important;
+            padding-left: 40px !important;
+        }
+
+        .afvalShopCategories ul {
+            list-style: none !important;
+            margin: 0 !important;
+            padding-left: unset !important;
+        }
+
+        #search-section h2 {
+            margin-left: 0px !important;
+        }
+
+
+        /* Global font family */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        div {
+            font-family: 'Rethink Sans', sans-serif !important;
+        }
+
+        /* Add margin-bottom to only headings */
+        /* h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            margin-bottom: 12px !important;
+            margin-top: 12px !important;
+        } */
+
+        /* Remove ::after height on headings */
+        h1::after,
+        h2::after,
+        h3::after,
+        h4::after,
+        h5::after,
+        h6::after {
+            height: 0 !important;
+            letter-spacing: normal !important;
+        }
+
+        /* Mobile-first styles */
+        h1 {
+            font-size: 1.75rem !important;
+            line-height: 1.85rem !important;
+            /* 0.1rem more */
+            font-weight: 700 !important;
+            letter-spacing: normal !important;
+        }
+
+        h2 {
+            font-size: 1.2em !important;
+            line-height: 1.3em !important;
+            font-weight: 600 !important;
+            letter-spacing: normal !important;
+        }
+
+        h3 {
+            font-size: 1.05em !important;
+            line-height: 1.15em !important;
+            font-weight: 500 !important;
+            letter-spacing: normal !important;
+        }
+
+        h4 {
+            font-size: 0.95em !important;
+            line-height: 1.05em !important;
+            font-weight: 500 !important;
+            letter-spacing: normal !important;
+        }
+
+        h5 {
+            font-size: 0.875em !important;
+            line-height: 0.975em !important;
+            font-weight: 500 !important;
+            letter-spacing: normal !important;
+        }
+
+        h6 {
+            font-size: 0.8em !important;
+            line-height: 0.9em !important;
+            font-weight: 500 !important;
+            letter-spacing: normal !important;
+        }
+
+        /* Desktop overrides */
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2.25rem !important;
+                line-height: 2.35rem !important;
+            }
+
+            h2 {
+                font-size: 1.3em !important;
+                line-height: 1.4em !important;
+            }
+
+            h3 {
+                font-size: 1.2em !important;
+                line-height: 1.3em !important;
+            }
+
+            h4 {
+                font-size: 1.1em !important;
+                line-height: 1.2em !important;
+            }
+
+            h5 {
+                font-size: 1em !important;
+                line-height: 1.1em !important;
+            }
+
+            h6 {
+                font-size: 0.9em !important;
+                line-height: 1em !important;
+            }
+        }
+
+
+        p a {
+            color: -webkit-link;
+            cursor: pointer;
+            text-decoration: underline;
+            letter-spacing: normal !important;
+        }
+
+        p {
+            margin: revert !important;
+            margin-top: 0.25em !important;
+            margin-bottom: 1.75em !important;
+            letter-spacing: normal !important;
+        }
+
+        .redunderline {
+            border-bottom: 1px solid #9e0606 !important;
+            color: #9e0606 !important;
+        }
+
+        .greenunderline {
+            border-bottom: 1px solid #108359 !important;
+            color: #108359 !important;
+        }
+
+        .orangeunderline {
+            border-bottom: 1px solid #e1a627 !important;
+            color: #e1a627 !important;
+        }
+
+        .menu-push{
+          position: relative !important;
+        }
+    </style>
+    <!-- NEW TEMPLATE RELATED END HERE-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <link rel="stylesheet"
+        href="/themes/afvalwijzer/css/default/jquery.smartbanner.css?v=161" />
+
+    
+                    <title>De Afvalwijzer - 404 - Pagina niet gevonden!</title>
+        
+    
+    <link rel="apple-touch-icon"
+        href="/themes/afvalwijzer/img/default/apple-touch-iphone.png" />
+    <link rel="apple-touch-icon" sizes="72x72"
+        href="/themes/afvalwijzer/img/default/apple-touch-ipad.png" />
+    <link rel="apple-touch-icon" sizes="114x114"
+        href="/themes/afvalwijzer/img/default/apple-touch-iphone4.png" />
+    <link rel="apple-touch-icon" sizes="144x144"
+        href="/themes/afvalwijzer/img/default/apple-touch-iphone.png" />
+    <link rel="shortcut icon" type="image/x-icon"
+        href="/themes/afvalwijzer/img/default/favicon.ico" />
+    <link rel="stylesheet"
+        href="/themes/afvalwijzer/fonts/roboto/stylesheet.css?v=161" />
+    <link rel="stylesheet"
+        href="/themes/afvalwijzer/css/default/framework-default.css?v=161" />
+    <link rel="stylesheet"
+        href="/themes/afvalwijzer/css/default/font-awesome.min.css?v=161" />
+
+    
+    <link rel="stylesheet"
+        href="/themes/afvalwijzer/fonts/swiss/stylesheet.css?v=161" />
+
+    <link rel="stylesheet"
+        href="/themes/afvalwijzer/css/default/jquery-ui.min.css?v=161" />
+
+    
+        <link rel="stylesheet"
+            href="/themes/afvalwijzer/fonts/afvalwijzer/stylesheet.css" />
+
+        <link rel="stylesheet" type="text/css" media="all and (min-width: 768px)"
+            href="/themes/afvalwijzer/css/default/menu.css" />
+        <link rel="stylesheet" type="text/css" media="all and (max-width: 767px)"
+            href="/themes/afvalwijzer/css/default/menu-mobile.css" />
+        <link rel="stylesheet" media="all and (min-width: 768px)"
+            href="/themes/afvalwijzer/css/default/home-default.css?v=161" />
+        <link rel="stylesheet" media="all and (max-width: 767px)"
+            href="/themes/afvalwijzer/css/default/home-default-mobile.css?v=161" />
+        <link rel="stylesheet" media="all and (max-width: 1124px)"
+            href="/themes/afvalwijzer/css/default/home-default-tablet.css?v=161" />
+        <link rel="stylesheet" type="text/css"
+            href="/themes/afvalwijzer/css/default/select2.css?v=161" />
+        <link rel="stylesheet" type="text/css"
+            href="/themes/afvalwijzer/css/default/registration-pickup.css?v=161" />
+
+        
+        
+        <script>
+            document.write('<link rel="stylesheet" type="text/css" href="/themes/afvalwijzer/css/default/styles-retina.css" media="only screen and (-webkit-min-device-pixel-ratio: 2)"/>');
+            //-->
+        </script>
+
+        <!--[if lt IE 9]>
+        <link rel="stylesheet" type="text/css" href="/themes/afvalwijzer/css/default/menu.css" />
+        <link rel="stylesheet" media="all" href="/themes/afvalwijzer/css/default/home-default.css?v=161" />
+        <link rel="stylesheet" media="all" href="/themes/afvalwijzer/css/default/home-default-ie8.css?v=161" />
+        <![endif]-->
+        <!--[if IE 9]>
+        <link rel="stylesheet" type="text/css" href="/themes/afvalwijzer/css/default/menu.css" />
+        <link rel="stylesheet" media="all" href="/themes/afvalwijzer/css/default/home-default.css?v=161" />
+        <link rel="stylesheet" media="all" href="/themes/afvalwijzer/css/default/home-default-ie9.css?v=161" />
+        <![endif]-->
+        <!--[if IE ]>
+        <link rel="stylesheet" media="all" href="/themes/afvalwijzer/css/default/home-default-IEfix.css?v=161" />
+        <![endif]-->
+
+    
+        <link rel="stylesheet" media="all" href="https://static.mijnafvalwijzer.nl/static/html/css/icons.css" />
+
+    
+    
+            <link rel="stylesheet"
+            href="/themes/afvalwijzer/css/default/background-default.css?v=161" />
+    
+    <script
+        src="/themes/afvalwijzer/js/jquery-3.6.0.min.js?v=161"></script>
+    <script
+        src="/themes/afvalwijzer/js/jquery-ui-1.13.1.min.js?v=161"></script>
+    <script
+        src="/themes/afvalwijzer/js/datepicker-nl.js?v=161"></script>
+
+            <script
+            src="/themes/afvalwijzer/js/home-afvalwijzer.js?v=161"></script>
+        <script
+            src="/themes/afvalwijzer/js/modernizr.custom.js"></script>
+        <script
+            src="/themes/afvalwijzer/js/select2.js?v=161"></script>
+            
+    <script
+        src="/themes/afvalwijzer/js/retina.js"></script>
+
+    <script
+        src="/themes/afvalwijzer/js/jquery.smartbanner.js?v=161"></script>
+
+        <script>
+        var isBedrijven = '';
+    </script>
+</head>
+
+<body class="menu-push">
+  <div class="container-fluid">
+          
+      <header id="header" class="primary-bg-color">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-full text-white">
+          <a class="flex items-center" style="cursor: pointer;" href="/" aria-label="Afvalwijzer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 186 24" class="h-6 w-auto fill-white" role="img" aria-label="Afvalwijzer logo">
+      <path
+      d="M44.7394 16.9927H38.1947L36.9769 20.0265H32.0312L38.9477 1.97278H44.0607L50.847 20.0265H45.8456L44.7394 16.9927ZM43.4936 13.4192L41.467 7.57501L39.4962 13.4192H43.4936Z" />
+      <path
+      d="M57.1877 11.4749V20.0272H52.8649V11.4749H51.3496V7.92932H52.8649V5.9006C52.8649 4.60707 52.9951 3.22047 53.9712 1.92693C55.0774 0.437963 56.7322 0.0098877 58.1638 0.0098877C58.9726 0.0098877 59.6234 0.177392 60.2462 0.419349V4.15107C59.6512 3.79744 59.1399 3.7416 58.8982 3.7416C58.2475 3.7416 57.8663 3.98357 57.6804 4.19761C57.2249 4.70944 57.197 5.63074 57.197 6.22632V7.92932H60.2276V11.4749H57.197H57.1877Z" />
+      <path
+      d="M66.5489 7.9295L69.4401 14.1273L72.387 7.9295H77.2026L70.9089 20.0274H67.962L61.7148 7.9295H66.5489Z" />
+      <path
+      d="M87.2599 7.9283H91.5827V20.0261H87.2599V18.6954C86.2558 20.0727 84.6941 20.4263 83.5041 20.4263C82.2026 20.4263 80.613 20.0448 79.1534 18.5093C77.9914 17.2623 77.4243 15.885 77.4243 14.0703C77.4243 11.7996 78.3168 10.199 79.2929 9.23114C80.3248 8.19817 81.9145 7.52814 83.6436 7.52814C85.5865 7.52814 86.7486 8.53319 87.2692 9.10086V7.93761L87.2599 7.9283ZM82.7139 11.9857C82.119 12.5534 81.8494 13.3444 81.8494 13.9586C81.8494 14.6659 82.1469 15.4197 82.6861 15.9315C83.1416 16.3596 83.9039 16.7411 84.629 16.7411C85.3541 16.7411 86.0327 16.4433 86.5812 15.9036C86.9624 15.522 87.39 14.9264 87.39 13.9586C87.39 13.3909 87.232 12.6278 86.5533 11.9857C86.1443 11.6135 85.5307 11.204 84.6104 11.204C84.0712 11.204 83.3368 11.3901 82.7232 11.9857H82.7139Z" />
+      <path d="M98.9004 0V20.0266H94.5776V0H98.9004Z" />
+      <path
+      d="M105.204 7.9295L108.067 14.3134L111.125 7.9295H113.775L116.833 14.5089L119.864 7.9295H124.68L118.349 20.0274H115.43L112.399 13.3735L109.508 20.0274H106.589L100.37 7.9295H105.204Z" />
+      <path
+      d="M128.332 0C129.68 0 130.767 1.0795 130.767 2.43818C130.767 3.79687 129.689 4.87636 128.332 4.87636C126.974 4.87636 125.896 3.79687 125.896 2.43818C125.896 1.0795 126.974 0 128.332 0ZM130.498 7.92874V20.0266C128.109 20.0266 126.175 18.0909 126.175 15.6993V7.92874H130.498Z" />
+      <path
+      d="M135.601 0C136.949 0 138.037 1.0795 138.037 2.43818C138.037 3.79687 136.958 4.87636 135.601 4.87636C134.244 4.87636 133.166 3.79687 133.166 2.43818C133.166 1.0795 134.244 0 135.601 0ZM137.767 7.92874V23.991C135.378 23.991 133.444 22.0553 133.444 19.6637V7.93805H137.767V7.92874Z" />
+      <path d="M147.017 16.4818H152.074V20.0274H139.775L145.483 11.4751H140.612V7.9295H152.669L147.017 16.4818Z" />
+      <path
+      d="M167.516 14.779H158.517C158.517 15.4304 158.759 16.2958 159.27 16.8077C159.54 17.0775 160.079 17.4033 161.055 17.4033C161.167 17.4033 161.92 17.3753 162.459 17.0775C162.728 16.9193 163.026 16.6495 163.212 16.2679H167.349C167.163 16.9473 166.782 17.8965 165.889 18.7619C164.997 19.6274 163.593 20.437 160.971 20.437C159.372 20.437 157.457 20.0834 155.97 18.5944C155.189 17.8127 154.185 16.3238 154.185 14.0252C154.185 11.9964 154.938 10.3679 155.998 9.34423C157.002 8.36709 158.564 7.58539 160.944 7.58539C162.347 7.58539 164.16 7.88318 165.592 9.23255C167.293 10.8611 167.507 12.9643 167.507 14.323V14.779H167.516ZM163.537 12.2942C163.426 11.8382 163.156 11.3171 162.831 10.9914C162.264 10.4237 161.483 10.34 161.046 10.34C160.311 10.34 159.744 10.5261 159.289 10.9914C158.991 11.3171 158.722 11.7452 158.638 12.2942H163.528H163.537Z" />
+      <path
+      d="M170.007 7.92733H174.33V9.90021C174.767 9.09059 175.38 8.55083 176.031 8.22512C176.682 7.87149 177.463 7.74121 178.281 7.74121C178.392 7.74121 178.578 7.76913 179.145 7.79704V11.8824C178.931 11.7707 178.336 11.4543 177.277 11.4543C176.709 11.4543 175.929 11.5381 175.306 12.1057C174.385 12.9433 174.33 14.2182 174.33 14.8603V20.0345H170.007V7.93664V7.92733Z" />
+      <path
+      d="M183.107 20.0362C184.452 20.0362 185.542 18.9445 185.542 17.598C185.542 16.2514 184.452 15.1598 183.107 15.1598C181.761 15.1598 180.671 16.2514 180.671 17.598C180.671 18.9445 181.761 20.0362 183.107 20.0362Z" />
+      <path
+      d="M22.431 20.0363L19.419 8.74803C18.666 5.9283 16.1095 3.96472 13.1997 3.96472L16.2117 15.2529C16.9647 18.0727 19.5212 20.0363 22.431 20.0363Z" />
+      <path
+      d="M0 20.0363L3.01202 8.74803C3.76502 5.9283 6.32152 3.96472 9.23127 3.96472L6.21925 15.2529C5.46625 18.0727 2.90976 20.0363 0 20.0363Z" />
+      <path
+      d="M13.1997 3.96472L11.2196 3.96472C10.1319 3.96472 9.23946 3.08065 9.23946 1.98254V0.000346661H11.2196C12.3073 0.000346661 13.1997 0.884425 13.1997 1.98254V3.96472Z" />
+      <path
+      d="M11.2208 20.0352H13.201V22.0173C13.201 23.1061 12.3178 23.9995 11.2208 23.9995H9.24072V22.0173C9.24072 20.9285 10.1239 20.0352 11.2208 20.0352Z" />
+      </svg>
+          </a>
+        </div>
+      </header>
+    
+    <div class="flex flex-col max-w-7xl mx-auto px-6 space-y-12">
+      <div class="pt-[100px] pb-0 px-6 bg-white w-full">
+                  <h1 class="text-4xl font-semibold text-green-700 !mb-[24px]">404 - Pagina niet gevonden!</h1>
+          <p class="text-base" style="color: #676767;">De door u opgegeven pagina kon niet worden gevonden. U kunt opnieuw <a href="/site/logout" title="Wijzig uw postcode">uw postcode invoeren</a>.</p>
+
+          <div class="mt-8">
+            <a href="/" class="inline-flex items-center justify-center text-white hover:opacity-90 transition"
+              style="height: 44px; padding: 0 24px; border-radius: 10px; background: #177F5F; font-size: 16px;">
+              Kies adres
+            </a>
+          </div>
+              </div>
+    </div>
+  </div>
+
+      <footer class="bg-[#F5F5F5] mt-[100px]">
+      <div class="max-w-7xl mx-auto px-6 py-16">
+        <div class="p-6 w-full flex flex-col md:flex-row md:justify-between md:items-center text-base">
+          <div class="flex justify-center md:justify-start items-center space-x-2" style="color: #000033;">
+            <a href="/nl/privacystatement" class="hover:underline">Privacy Statement</a>
+            <span>|</span>
+            <a href="/site/cookiesstatement" class="hover:underline">Cookies</a>
+          </div>
+          <div class="mt-4 md:mt-0 text-center md:text-right" style="color: #676767;">&copy; Afvalwijzer</div>
+        </div>
+      </div>
+    </footer>
+  </body>
+
+</html>

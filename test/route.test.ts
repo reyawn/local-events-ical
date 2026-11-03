@@ -9,6 +9,7 @@ import worker from "../src/main.ts";
 import enCalendar from "./fixtures/afvalwijzer-1701DA-25.en.ics?raw";
 import nlCalendar from "./fixtures/afvalwijzer-1701DA-25.nl.ics?raw";
 import nlFixtureTemplate from "./fixtures/afvalwijzer-1701DA-25.nl.html?raw";
+import errorPageHtml from "./fixtures/afvalwijzer-1703EZ-1.error.html?raw";
 import { network } from "./network.ts";
 
 const year = new Date().getUTCFullYear().toString(10);
@@ -69,6 +70,96 @@ describe("calendar route", () => {
 
     expect(response.status).toBe(400);
     expect(await response.text()).toBe("Invalid address");
+  });
+
+  it("returns 404 when Afvalwijzer redirects the address to its error page", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/1703EZ/1/",
+        () =>
+          new HttpResponse(null, {
+            status: 302,
+            headers: { Location: "https://www.mijnafvalwijzer.nl/error" },
+          }),
+      ),
+    );
+
+    const response = await fetchWorker("/1703EZ/1");
+
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe("Address not found");
+  });
+
+  it("returns 404 when the address page has no pickup schedule", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => HttpResponse.html(errorPageHtml),
+      ),
+    );
+
+    const response = await fetchWorker("/1703EZ/1");
+
+    expect(response.status).toBe(404);
+    expect(await response.text()).toBe("Address not found");
+  });
+
+  it("does not treat an unrelated redirect as a missing address", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () =>
+          new HttpResponse(null, {
+            status: 302,
+            headers: {
+              Location: "https://www.mijnafvalwijzer.nl/somewhere-else",
+            },
+          }),
+      ),
+    );
+
+    await expect(fetchWorker("/1703EZ/1")).rejects.toThrow(
+      "Afvalwijzer redirected to https://www.mijnafvalwijzer.nl/somewhere-else",
+    );
+  });
+
+  it("does not report an Afvalwijzer server error as a missing address", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => new HttpResponse("unavailable", { status: 503 }),
+      ),
+    );
+
+    await expect(fetchWorker("/1701DA/25")).rejects.toThrow(
+      "Afvalwijzer returned 503",
+    );
+  });
+
+  it("does not report a network failure as a missing address", async () => {
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => HttpResponse.error(),
+      ),
+    );
+
+    await expect(fetchWorker("/1701DA/25")).rejects.toThrow();
+  });
+
+  it("does not report an unparseable pickup page as a missing address", async () => {
+    const html =
+      `<div id="jaar-${year}"><p class="papier">vrijdag 09 januari</p></div>`;
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => HttpResponse.html(html),
+      ),
+    );
+
+    await expect(fetchWorker("/1701DA/25")).rejects.toThrow(
+      "Unknown pickup type: papier",
+    );
   });
 
   it("rejects an unsupported postcode", async () => {

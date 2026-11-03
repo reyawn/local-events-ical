@@ -8,7 +8,11 @@ export const repoRoot = path.resolve(here, "../../../..");
 export const postCode = "1701DA";
 export const houseNumber = "25";
 export const feedPath = `/${postCode}/${houseNumber}`;
+export const missingPostCode = "1703EZ";
+export const missingHouseNumber = "1";
+export const missingFeedPath = `/${missingPostCode}/${missingHouseNumber}`;
 export const nlFixtureName = "afvalwijzer-1701DA-25.nl.html";
+export const errorFixtureName = "afvalwijzer-1703EZ-1.error.html";
 export const nlCalendarName = "afvalwijzer-1701DA-25.nl.ics";
 export const enCalendarName = "afvalwijzer-1701DA-25.en.ics";
 
