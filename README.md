@@ -19,7 +19,11 @@ npm run dev
 `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are repository secrets.
 
 `CALENDAR_TTL` is an optional Worker variable, in seconds. Values are clamped
-from one hour to one week. When it is unset, feeds ask clients to refresh daily.
+from one hour to one week. When it is unset, feeds ask clients to refresh daily
+via `REFRESH-INTERVAL` / `X-PUBLISHED-TTL` and `Cache-Control: public, max-age=86400`.
+A successful feed is stored for that same lifetime, keyed by address, year, and
+resolved locale (`en` or `nl`). A repeat request does not fetch Afvalwijzer.
+404 and 5xx responses are not stored.
 
 `AFVALWIJZER_ORIGIN`, when set, is the Afvalwijzer site the Worker fetches.
 Local verification points it at a fixture server. When it is unset, the Worker

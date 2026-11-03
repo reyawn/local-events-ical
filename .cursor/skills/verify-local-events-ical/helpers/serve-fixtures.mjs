@@ -20,6 +20,7 @@ const port = Number(process.env.FIXTURE_PORT ?? 8791);
 const year = Number(process.env.FIXTURE_YEAR ?? new Date().getFullYear());
 const nlHtml = readFixtureHtml(nlFixtureName, year);
 const errorHtml = readFileSync(fixtureFile(errorFixtureName));
+let hits = 0;
 
 const routes = new Map([
   [`/nl/${postCode}/${houseNumber}`, nlHtml],
@@ -31,6 +32,11 @@ const missingPaths = new Set([
   `/nl/${missingPostCode}/${missingHouseNumber}/`,
 ]);
 
+const recordHit = (pathname) => {
+  hits += 1;
+  console.log(`hit ${hits} ${pathname}`);
+};
+
 const server = createServer((request, response) => {
   const pathname = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
 
@@ -40,7 +46,14 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (pathname === "/hits") {
+    response.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    response.end(`${hits}\n`);
+    return;
+  }
+
   if (missingPaths.has(pathname)) {
+    recordHit(pathname);
     response.writeHead(302, { Location: "/error" });
     response.end();
     return;
@@ -59,6 +72,7 @@ const server = createServer((request, response) => {
     return;
   }
 
+  recordHit(pathname);
   response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
   response.end(body);
 });

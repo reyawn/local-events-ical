@@ -6,6 +6,7 @@ import {
 } from "./calendar/index.ts";
 import { lookupCityConfigurationForPostCode } from "./cities/index.ts";
 import { calendarTtl, DEFAULT_LANGUAGE } from "./config.ts";
+import { cachedFeed } from "./feedCache.ts";
 import { AddressNotFound, type SupportedLocale } from "./types.ts";
 
 const pathRegex =
@@ -56,40 +57,41 @@ const calendarResponse = async (
     DEFAULT_LANGUAGE) as SupportedLocale;
 
   const year = new Date().getFullYear().toString(10);
-  const address = {
-    houseNumber: parseInt(houseNumber, 10),
-    postCode,
-  };
-  const localizedEventsPerSource = await Promise.all(
-    cityConfiguration.eventSources.map(async (eventSource) => ({
-      sourceName: eventSource.name,
-      events: await eventSource.fetchLocalizedPickupEvents(
-        address,
-        year,
-        { locale, origin: env.AFVALWIJZER_ORIGIN },
-      ),
-    })),
-  );
+  const ttl = calendarTtl(env.CALENDAR_TTL);
 
-  const calendar = createCalendar(cityConfiguration, {
-    locale,
-    ttl: calendarTtl(env.CALENDAR_TTL),
-  });
-
-  for (const { sourceName, events } of localizedEventsPerSource) {
-    await addLocalizedPickupEventsToCalendar(
-      events,
-      calendar,
-      sourceName,
-      address,
+  return cachedFeed(request, locale, year, ttl, async () => {
+    const address = {
+      houseNumber: parseInt(houseNumber, 10),
+      postCode,
+    };
+    const localizedEventsPerSource = await Promise.all(
+      cityConfiguration.eventSources.map(async (eventSource) => ({
+        sourceName: eventSource.name,
+        events: await eventSource.fetchLocalizedPickupEvents(
+          address,
+          year,
+          { locale, origin: env.AFVALWIJZER_ORIGIN },
+        ),
+      })),
     );
-  }
 
-  return new Response(calendar.toString(), {
-    headers: new Headers({
-      "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": 'attachment; filename="calendar.ics"',
-    }),
+    const calendar = createCalendar(cityConfiguration, { locale, ttl });
+
+    for (const { sourceName, events } of localizedEventsPerSource) {
+      await addLocalizedPickupEventsToCalendar(
+        events,
+        calendar,
+        sourceName,
+        address,
+      );
+    }
+
+    return new Response(calendar.toString(), {
+      headers: new Headers({
+        "Content-Type": "text/calendar; charset=utf-8",
+        "Content-Disposition": 'attachment; filename="calendar.ics"',
+      }),
+    });
   });
 };
 
