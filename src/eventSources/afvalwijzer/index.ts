@@ -133,8 +133,17 @@ export const parsePickupEvents = async (
 
 const ERROR_PATH = "/error";
 
-const pathnameOf = (value: string, base: string): string =>
-  new URL(value, base).pathname.replace(/\/+$/, "");
+const isErrorRedirect = (response: Response, requestUrl: string): boolean => {
+  if (response.status < 300 || response.status >= 400) {
+    return false;
+  }
+  const location = response.headers.get("Location");
+  if (!location) {
+    return false;
+  }
+  return new URL(location, requestUrl).pathname.replace(/\/+$/, "") ===
+    ERROR_PATH;
+};
 
 const fetchAddressPage = async (
   address: Address,
@@ -149,17 +158,11 @@ const fetchAddressPage = async (
     redirect: "manual",
   });
 
-  const location = response.headers.get("Location");
-  const followedErrorPage = response.redirected &&
-    pathnameOf(response.url, url) === ERROR_PATH;
-  const manualErrorRedirect = response.status >= 300 &&
-    response.status < 400 &&
-    location !== null &&
-    pathnameOf(location, url) === ERROR_PATH;
-  if (followedErrorPage || manualErrorRedirect) {
+  if (isErrorRedirect(response, url)) {
     throw new AddressNotFound();
   }
   if (response.status >= 300 && response.status < 400) {
+    const location = response.headers.get("Location");
     throw new Error(`Afvalwijzer redirected to ${location ?? response.url}`);
   }
 
