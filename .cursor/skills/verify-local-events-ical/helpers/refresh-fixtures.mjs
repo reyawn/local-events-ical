@@ -106,5 +106,5 @@ const file = fixtureFile(nlFixtureName);
 writeFileSync(file, lines.join("\n"));
 console.log(`${file} ${pickups.length} pickups`);
 console.log(
-  "Re-run the feed check. If the normalized calendars differ, replace test/fixtures/afvalwijzer-1701DA-25.nl.ics and afvalwijzer-1701DA-25.en.ics.",
+  "Re-run the feed check. If the normalized calendars differ, replace test/fixtures/afvalwijzer-1701DA-25.nl.ics and afvalwijzer-1701DA-25.en.ics. Keep the emitted UIDs.",
 );

@@ -27,7 +27,7 @@ uses `https://www.mijnafvalwijzer.nl`.
 
 The saved page for Stadsbedrijf, Beukenlaan 25, 1701 DA Heerhugowaard is
 `test/fixtures/afvalwijzer-1701DA-25.nl.html`. The Worker always requests the
-`/nl/` page and translates summaries itself. Golden calendars, with `UID` and
-`DTSTAMP` normalized, are `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and
-`test/fixtures/afvalwijzer-1701DA-25.en.ics`. Refresh them with
+`/nl/` page and translates summaries itself. Golden calendars, with `DTSTAMP`
+normalized and stable UIDs kept, are `test/fixtures/afvalwijzer-1701DA-25.nl.ics`
+and `test/fixtures/afvalwijzer-1701DA-25.en.ics`. Refresh them with
 `.cursor/skills/verify-local-events-ical`.

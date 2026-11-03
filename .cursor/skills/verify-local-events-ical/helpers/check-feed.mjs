@@ -67,8 +67,9 @@ const checkFeed = async (locale, goldenName) => {
     fail(`${locale} content-type ${contentType}`);
   }
 
-  const uids = [...response.body.matchAll(/^UID:(.*)$/gm)].map((match) =>
-    match[1]
+  const unfolded = response.body.replace(/\r\n[ \t]/g, "").replace(/\n[ \t]/g, "");
+  const uids = [...unfolded.matchAll(/^UID:(.*)$/gm)].map((match) =>
+    match[1].trim()
   );
   const stamps = [...response.body.matchAll(/^DTSTAMP:(.*)$/gm)].map((match) =>
     match[1].trim()
@@ -83,7 +84,7 @@ const checkFeed = async (locale, goldenName) => {
     fail(`${locale} DTSTAMP missing or malformed`);
   }
 
-  const actual = normalizeCalendar(response.body, year);
+  const actual = normalizeCalendar(response.body);
   const golden = readFileSync(fixtureFile(goldenName), "utf8");
   if (actual !== golden) {
     fail(`${locale} calendar does not match ${goldenName}`);
@@ -100,6 +101,18 @@ const checkStatus = async (urlPath, status, bodyText, stem) => {
 
 await checkFeed("nl", nlCalendarName);
 await checkFeed("en", enCalendarName);
+
+const uidList = (fileStem) => {
+  const body = readFileSync(path.join(outDir, `${fileStem}.body`), "utf8")
+    .replace(/\r\n[ \t]/g, "")
+    .replace(/\n[ \t]/g, "");
+  return [...body.matchAll(/^UID:(.*)$/gm)].map((match) => match[1].trim());
+};
+const nlUids = uidList("nl");
+const enUids = uidList("en");
+if (nlUids.join("\n") !== enUids.join("\n")) {
+  fail("nl and en feeds use different UIDs");
+}
 await checkStatus("/nope", 400, "Invalid address", "invalid");
 await checkStatus(
   `/${postCode.toLowerCase()}/${houseNumber}`,
