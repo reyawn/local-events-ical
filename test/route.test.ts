@@ -6,11 +6,21 @@ import { env } from "cloudflare:workers";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 import worker from "../src/main.ts";
-import fixtureTemplate from "./fixtures/address.html?raw";
+import enCalendar from "./fixtures/afvalwijzer-1701DA-25.en.ics?raw";
+import nlCalendar from "./fixtures/afvalwijzer-1701DA-25.nl.ics?raw";
+import nlFixtureTemplate from "./fixtures/afvalwijzer-1701DA-25.nl.html?raw";
 import { network } from "./network.ts";
 
 const year = new Date().getUTCFullYear().toString(10);
-const fixtureHtml = fixtureTemplate.replaceAll("YEAR", year);
+const fixtureHtml = nlFixtureTemplate.replaceAll("YEAR", year);
+
+const normalizeCalendar = (ics: string): string =>
+  ics
+    .replace(/\r\n/g, "\n")
+    .replace(/^UID:.*$/gm, "UID:NORMALIZED")
+    .replace(/^DTSTAMP:.*$/gm, "DTSTAMP:NORMALIZED")
+    .replaceAll(year, "YEAR")
+    .replace(/\s+$/, "") + "\n";
 
 const fetchWorker = async (
   path: string,
@@ -48,7 +58,7 @@ describe("calendar route", () => {
   });
 
   it("rejects a lowercase postcode", async () => {
-    const response = await fetchWorker("/1706ac/20");
+    const response = await fetchWorker("/1701da/25");
 
     expect(response.status).toBe(400);
     expect(await response.text()).toBe("Invalid address");
@@ -62,7 +72,7 @@ describe("calendar route", () => {
   });
 
   it("returns a Dutch calendar for a known address", async () => {
-    const response = await fetchWorker("/1706AC/20", {
+    const response = await fetchWorker("/1701DA/25", {
       headers: { "Accept-Language": "nl" },
     });
     const body = await response.text();
@@ -74,32 +84,21 @@ describe("calendar route", () => {
     expect(response.headers.get("Content-Disposition")).toBe(
       'attachment; filename="calendar.ics"',
     );
-    expect(body).toContain("METHOD:REQUEST");
-    expect(body).toContain("Dijk en Waard afvalkalender");
-    expect(body).toContain("SUMMARY:Restafval");
-    expect(body).toContain("SUMMARY:Groente\\, Fruit en Tuinafval");
-    expect(body).toContain("SUMMARY:Plastic\\, Metalen en Drankkartons");
-    expect(body).toContain(`DTSTART;VALUE=DATE:${year}0109`);
-    expect(body).toContain(`DTSTART;VALUE=DATE:${year}0112`);
-    expect(body).toContain(`DTSTART;VALUE=DATE:${year}0116`);
-    expect(body).toContain("X-PUBLISHED-TTL:P1D");
+    expect(normalizeCalendar(body)).toBe(nlCalendar);
   });
 
   it("returns an English calendar and honors a trailing slash", async () => {
-    const response = await fetchWorker("/1706AC/20/", {
+    const response = await fetchWorker("/1701DA/25/", {
       headers: { "Accept-Language": "en" },
     });
     const body = await response.text();
 
     expect(response.status).toBe(200);
-    expect(body).toContain("Dijk en Waard Garbage Calendar");
-    expect(body).toContain("SUMMARY:Garbage");
-    expect(body).toContain("SUMMARY:Compostable waste");
-    expect(body).toContain("SUMMARY:Plastic\\, Metal and Drink cartons");
+    expect(normalizeCalendar(body)).toBe(enCalendar);
   });
 
   it("embeds a clamped calendar ttl from the worker binding", async () => {
-    const response = await fetchWorker("/1706AC/20", undefined, {
+    const response = await fetchWorker("/1701DA/25", undefined, {
       ...env,
       CALENDAR_TTL: "7200",
     });

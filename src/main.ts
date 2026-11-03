@@ -61,7 +61,7 @@ const calendarResponse = async (
           postCode,
         },
         year,
-        { locale },
+        { locale, origin: env.AFVALWIJZER_ORIGIN },
       )
     ),
   );

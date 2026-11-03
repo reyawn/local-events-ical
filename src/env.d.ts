@@ -3,6 +3,7 @@
 // wrangler.jsonc and regenerate types before setting a deployed value.
 interface Env {
   CALENDAR_TTL?: string;
+  AFVALWIJZER_ORIGIN?: string;
 }
 
 declare module "*.html?raw" {
