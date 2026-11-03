@@ -49,6 +49,7 @@ const notModified = (
 
   const headers = new Headers();
   headers.set("ETag", etag);
+  headers.set("Vary", "Accept-Language");
   const cacheControl = response.headers.get("Cache-Control");
   if (cacheControl) {
     headers.set("Cache-Control", cacheControl);
@@ -80,6 +81,7 @@ export const cachedFeed = async (
 
   const headers = new Headers(response.headers);
   headers.set("Cache-Control", `public, max-age=${ttl}`);
+  headers.set("Vary", "Accept-Language");
   const body = await response.arrayBuffer();
   headers.set("ETag", await entityTag(body));
   const stored = new Response(body, { status: 200, headers });

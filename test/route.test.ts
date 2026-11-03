@@ -184,6 +184,8 @@ describe("calendar route", () => {
     expect(normalizeCalendar(dutchBody)).toBe(nlCalendar);
     expect(normalizeCalendar(englishBody)).toBe(enCalendar);
     expect(dutch.headers.get("Cache-Control")).toBe("public, max-age=86400");
+    expect(dutch.headers.get("Vary")).toBe("Accept-Language");
+    expect(dutchAgain.headers.get("Vary")).toBe("Accept-Language");
     expect(englishAgain.headers.get("ETag")).toBe(english.headers.get("ETag"));
 
     const notModified = await fetchWorker("/1701DA/25", {
@@ -200,6 +202,7 @@ describe("calendar route", () => {
     expect(notModified.headers.get("Cache-Control")).toBe(
       "public, max-age=86400",
     );
+    expect(notModified.headers.get("Vary")).toBe("Accept-Language");
   });
 
   it("fetches again when the address page has no pickups", async () => {
