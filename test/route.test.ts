@@ -5,7 +5,9 @@ import {
 import { env } from "cloudflare:workers";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
+import { feedCacheUrl } from "../src/feedCache.ts";
 import worker from "../src/main.ts";
+import { SupportedLocale } from "../src/types.ts";
 import enCalendar from "./fixtures/afvalwijzer-1701DA-25.en.ics?raw";
 import nlCalendar from "./fixtures/afvalwijzer-1701DA-25.nl.ics?raw";
 import nlFixtureTemplate from "./fixtures/afvalwijzer-1701DA-25.nl.html?raw";
@@ -44,8 +46,18 @@ const fetchWorker = async (
   return response;
 };
 
+const forgetFeedCache = async (): Promise<void> => {
+  await caches.default.delete(
+    feedCacheUrl("https://example.com/1701DA/25", SupportedLocale.nl, year),
+  );
+  await caches.default.delete(
+    feedCacheUrl("https://example.com/1701DA/25", SupportedLocale.en, year),
+  );
+};
+
 describe("calendar route", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await forgetFeedCache();
     network.use(
       http.get(
         "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
@@ -91,6 +103,8 @@ describe("calendar route", () => {
     expect(response.headers.get("Content-Disposition")).toBe(
       'attachment; filename="calendar.ics"',
     );
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=86400");
+    expect(response.headers.get("ETag")).toMatch(/^"[0-9a-f]{64}"$/);
     expect(normalizeCalendar(body)).toBe(nlCalendar);
   });
 
@@ -132,6 +146,80 @@ describe("calendar route", () => {
       CALENDAR_TTL: "7200",
     });
 
-    expect(await response.text()).toContain("X-PUBLISHED-TTL:PT2H");
+    const body = await response.text();
+    expect(body).toContain("X-PUBLISHED-TTL:PT2H");
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=7200");
+  });
+
+  it("serves a repeat request from cache and keeps locales apart", async () => {
+    let fetches = 0;
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => {
+          fetches += 1;
+          return HttpResponse.html(fixtureHtml);
+        },
+      ),
+    );
+
+    const dutch = await fetchWorker("/1701DA/25", {
+      headers: { "Accept-Language": "nl" },
+    });
+    const dutchAgain = await fetchWorker("/1701DA/25/", {
+      headers: { "Accept-Language": "nl-NL,nl;q=0.9,en-US;q=0.8,en;q=0.7" },
+    });
+    const english = await fetchWorker("/1701DA/25", {
+      headers: { "Accept-Language": "en" },
+    });
+    const englishAgain = await fetchWorker("/1701DA/25", {
+      headers: { "Accept-Language": "fr" },
+    });
+    const dutchBody = await dutch.text();
+    const englishBody = await english.text();
+
+    expect(fetches).toBe(2);
+    expect(await dutchAgain.text()).toBe(dutchBody);
+    expect(await englishAgain.text()).toBe(englishBody);
+    expect(normalizeCalendar(dutchBody)).toBe(nlCalendar);
+    expect(normalizeCalendar(englishBody)).toBe(enCalendar);
+    expect(dutch.headers.get("Cache-Control")).toBe("public, max-age=86400");
+    expect(englishAgain.headers.get("ETag")).toBe(english.headers.get("ETag"));
+
+    const notModified = await fetchWorker("/1701DA/25", {
+      headers: {
+        "Accept-Language": "nl,en;q=0.5",
+        "If-None-Match": dutch.headers.get("ETag") ?? "",
+      },
+    });
+
+    expect(fetches).toBe(2);
+    expect(notModified.status).toBe(304);
+    expect(await notModified.text()).toBe("");
+    expect(notModified.headers.get("ETag")).toBe(dutch.headers.get("ETag"));
+    expect(notModified.headers.get("Cache-Control")).toBe(
+      "public, max-age=86400",
+    );
+  });
+
+  it("fetches again when the address page has no pickups", async () => {
+    let fetches = 0;
+    network.use(
+      http.get(
+        "https://www.mijnafvalwijzer.nl/nl/:postCode/:houseNumber/",
+        () => {
+          fetches += 1;
+          return HttpResponse.html(`<div id="jaar-${year}"></div>`);
+        },
+      ),
+    );
+
+    await expect(fetchWorker("/1701DA/25")).rejects.toThrow(
+      "No pickup events found",
+    );
+    await expect(fetchWorker("/1701DA/25")).rejects.toThrow(
+      "No pickup events found",
+    );
+    expect(fetches).toBe(2);
   });
 });

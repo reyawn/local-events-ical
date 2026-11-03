@@ -31,6 +31,6 @@ Each feature file starts with an H1 and one paragraph, then exactly four H2 sect
 
 ## Features
 
-- [Calendar feed](./calendar-feed.md) covers the Dutch and English iCal bodies for `/1701DA/25`.
+- [Calendar feed](./calendar-feed.md) covers the Dutch and English iCal bodies for `/1701DA/25`, including the per-locale cache.
 - [Invalid address](./invalid-address.md) covers malformed paths, including a lowercase postcode.
 - [Unsupported postcode](./unsupported-postcode.md) covers a postcode outside Dijk en Waard.

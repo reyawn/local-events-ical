@@ -76,7 +76,7 @@ Do not delete `$RUN`.
 
 ## Helpers
 
-- `node .cursor/skills/verify-local-events-ical/helpers/serve-fixtures.mjs` serves the fixtures. `FIXTURE_PORT` defaults to `8791`.
+- `node .cursor/skills/verify-local-events-ical/helpers/serve-fixtures.mjs` serves the fixtures. `FIXTURE_PORT` defaults to `8791`. `GET /hits` is how many Afvalwijzer pages it has served. `/health` does not count.
 - `node .cursor/skills/verify-local-events-ical/helpers/check-feed.mjs --base http://127.0.0.1:8787 --out <dir>` asserts the feed and writes evidence.
 - `node .cursor/skills/verify-local-events-ical/helpers/refresh-fixtures.mjs` re-downloads the nl Afvalwijzer page and rewrites `test/fixtures/afvalwijzer-1701DA-25.nl.html`. The Worker does not fetch `/en/`. Run it when the municipal calendar changes, then rerun this skill. The page is Stadsbedrijf, Beukenlaan 25. The script keeps the `jaar` pickup paragraphs and writes `jaar-YEAR` so the year id can be substituted. If the normalized calendars differ, replace `test/fixtures/afvalwijzer-1701DA-25.nl.ics` and `test/fixtures/afvalwijzer-1701DA-25.en.ics` with the checker output (`DTSTAMP` normalized, `DTSTART` year written as `YEAR`, UIDs left as emitted). Update the count named in `features/calendar-feed.md` when the pickup count changes.
 

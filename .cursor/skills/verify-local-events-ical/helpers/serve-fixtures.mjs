@@ -14,6 +14,7 @@ import {
 const port = Number(process.env.FIXTURE_PORT ?? 8791);
 const year = Number(process.env.FIXTURE_YEAR ?? new Date().getFullYear());
 const nlHtml = readFixtureHtml(nlFixtureName, year);
+let hits = 0;
 
 const routes = new Map([
   [`/nl/${postCode}/${houseNumber}`, nlHtml],
@@ -29,6 +30,12 @@ const server = createServer((request, response) => {
     return;
   }
 
+  if (pathname === "/hits") {
+    response.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    response.end(`${hits}\n`);
+    return;
+  }
+
   const body = routes.get(pathname);
   if (!body) {
     response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
@@ -36,6 +43,8 @@ const server = createServer((request, response) => {
     return;
   }
 
+  hits += 1;
+  console.log(`hit ${hits} ${pathname}`);
   response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
   response.end(body);
 });
