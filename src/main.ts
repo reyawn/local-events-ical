@@ -53,17 +53,19 @@ const calendarResponse = async (
     DEFAULT_LANGUAGE) as SupportedLocale;
 
   const year = new Date().getFullYear().toString(10);
+  const address = {
+    houseNumber: parseInt(houseNumber, 10),
+    postCode,
+  };
   const localizedEventsPerSource = await Promise.all(
-    cityConfiguration.eventSources.map((eventSource) =>
-      eventSource.fetchLocalizedPickupEvents(
-        {
-          houseNumber: parseInt(houseNumber, 10),
-          postCode,
-        },
+    cityConfiguration.eventSources.map(async (eventSource) => ({
+      sourceName: eventSource.name,
+      events: await eventSource.fetchLocalizedPickupEvents(
+        address,
         year,
         { locale, origin: env.AFVALWIJZER_ORIGIN },
-      )
-    ),
+      ),
+    })),
   );
 
   const calendar = createCalendar(cityConfiguration, {
@@ -71,8 +73,13 @@ const calendarResponse = async (
     ttl: calendarTtl(env.CALENDAR_TTL),
   });
 
-  for (const localizedEvents of localizedEventsPerSource) {
-    addLocalizedPickupEventsToCalendar(localizedEvents, calendar);
+  for (const { sourceName, events } of localizedEventsPerSource) {
+    await addLocalizedPickupEventsToCalendar(
+      events,
+      calendar,
+      sourceName,
+      address,
+    );
   }
 
   return new Response(calendar.toString(), {
