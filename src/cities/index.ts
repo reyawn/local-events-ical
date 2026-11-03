@@ -1,5 +1,3 @@
-import { assertLessOrEqual } from "https://deno.land/std@0.223.0/assert/mod.ts";
-
 import dijkEnWaardCityConfiguration from "./configurations/dijk-en-waard.ts";
 import type { CityConfiguration } from "../types.ts";
 
@@ -16,11 +14,11 @@ for (const cityConfiguration of cityConfigurations) {
     } else {
       const [from, to] = rangeOrNumber;
 
-      assertLessOrEqual(
-        from,
-        to,
-        `${cityConfiguration.name} post code range ${rangeOrNumber} is invalid.`,
-      );
+      if (from > to) {
+        throw new Error(
+          `${cityConfiguration.name} post code range ${rangeOrNumber} is invalid.`,
+        );
+      }
 
       for (let i = from; i <= to; i++) {
         postCodePrefixToCityConfiguration.set(i, cityConfiguration);

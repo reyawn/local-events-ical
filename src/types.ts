@@ -24,6 +24,7 @@ export interface LocalizedPickupEvent<
 
 export interface FetchPickupEventsOptions {
   locale: SupportedLocale;
+  origin?: string;
 }
 
 type FetchLocalizedPickupEvents<

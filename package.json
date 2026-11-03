@@ -1,0 +1,24 @@
+{
+  "name": "local-events-ical",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "test": "vitest run",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types src/worker-configuration.d.ts"
+  },
+  "dependencies": {
+    "accept-language-parser": "1.5.0",
+    "ical-generator": "7.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.0.0",
+    "@msw/cloudflare": "^0.2.0",
+    "@types/accept-language-parser": "^1.5.8",
+    "msw": "^3.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.0.0"
+  }
+}
