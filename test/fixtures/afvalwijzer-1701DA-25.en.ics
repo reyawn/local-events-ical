@@ -1,7 +1,7 @@
 BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//sebbo.net//ical-generator//EN
-METHOD:REQUEST
+METHOD:PUBLISH
 NAME:Dijk en Waard Garbage Calendar
 X-WR-CALNAME:Dijk en Waard Garbage Calendar
 TIMEZONE-ID:Europe/Amsterdam

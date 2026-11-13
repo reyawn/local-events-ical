@@ -68,7 +68,7 @@ export const createCalendar = (
     ttl,
   });
 
-  calendar.method(ICalCalendarMethod.REQUEST);
+  calendar.method(ICalCalendarMethod.PUBLISH);
 
   return calendar;
 };

@@ -181,6 +181,24 @@ describe("calendar route", () => {
     expect(await response.text()).toBe("Unknown or unsupported postcode");
   });
 
+  it("publishes the feed instead of sending a meeting request", async () => {
+    const dutch = await fetchWorker("/1701DA/25", {
+      headers: { "Accept-Language": "nl" },
+    });
+    const english = await fetchWorker("/1701DA/25", {
+      headers: { "Accept-Language": "en" },
+    });
+    const dutchBody = await dutch.text();
+    const englishBody = await english.text();
+
+    expect(dutch.status).toBe(200);
+    expect(english.status).toBe(200);
+    for (const body of [dutchBody, englishBody]) {
+      expect(body).toContain("METHOD:PUBLISH");
+      expect(body).not.toContain("METHOD:REQUEST");
+    }
+  });
+
   it("returns a Dutch calendar for a known address", async () => {
     const response = await fetchWorker("/1701DA/25", {
       headers: { "Accept-Language": "nl" },
