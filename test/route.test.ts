@@ -181,6 +181,12 @@ describe("calendar route", () => {
     expect(await response.text()).toBe("Unknown or unsupported postcode");
   });
 
+  it("serves METHOD:PUBLISH", async () => {
+    const response = await fetchWorker("/1701DA/25");
+
+    expect(await response.text()).toContain("METHOD:PUBLISH");
+  });
+
   it("returns a Dutch calendar for a known address", async () => {
     const response = await fetchWorker("/1701DA/25", {
       headers: { "Accept-Language": "nl" },
